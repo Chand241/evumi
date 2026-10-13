@@ -147,8 +147,9 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // ---- Check DB users (Register Office, AC Land, Citizen) ----
-    const user = await User.findOne({ email: emailLower });
+    // ---- Check DB / Resilient users (Register Office, AC Land, Citizen) ----
+    const { findUserByEmail } = require('../utils/dbStore');
+    const user = await findUserByEmail(emailLower);
     if (!user) {
       return res.status(401).json({ success: false, message: 'ভুল ইমেইল বা পাসওয়ার্ড।' });
     }

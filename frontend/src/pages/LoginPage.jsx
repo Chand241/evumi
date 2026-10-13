@@ -1,16 +1,28 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogIn, AlertCircle, Lock, Mail, ShieldCheck } from 'lucide-react';
+import { LogIn, AlertCircle, Lock, Mail, ShieldCheck, CheckCircle2 } from 'lucide-react';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, getDashboardRoute } = useAuth();
 
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(location.state?.email || '');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(
+    location.state?.registeredSuccess
+      ? location.state?.message || '🎉 আপনার রেজিস্ট্রেশন সফল হয়েছে! অনুগ্রহ করে এখন পাসওয়ার্ড দিয়ে লগইন করুন।'
+      : null
+  );
+
+  useEffect(() => {
+    if (location.state?.email) {
+      setEmail(location.state.email);
+    }
+  }, [location.state]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -101,6 +113,27 @@ export default function LoginPage() {
               <p style={{ fontSize: '12px', color: '#64748b', margin: '2px 0 0' }}>স্বয়ংক্রিয় রোল-ভিত্তিক রিডাইরেক্ট</p>
             </div>
           </div>
+
+          {/* Success Alert from Registration Verification */}
+          {successMessage && (
+            <div style={{
+              padding: '12px 14px',
+              background: '#ecfdf5',
+              border: '1.5px solid #86efac',
+              borderRadius: '10px',
+              color: '#15803d',
+              fontSize: '13px',
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              fontWeight: '600',
+              boxShadow: '0 4px 12px rgba(22, 163, 74, 0.08)'
+            }}>
+              <CheckCircle2 size={18} style={{ color: '#16a34a', flexShrink: 0 }} />
+              <span>{successMessage}</span>
+            </div>
+          )}
 
           {/* Error Alert */}
           {error && (

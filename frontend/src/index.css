@@ -490,3 +490,91 @@ select option:checked {
   color: var(--text-muted);
   border: 1.5px solid var(--border-strong);
 }
+
+/* ============================================================
+   OTP Animated Verification Styles
+   ============================================================ */
+@keyframes otpPop {
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { transform: scale(1.18); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes otpBoxGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2), 0 4px 12px rgba(22, 163, 74, 0.12);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(22, 163, 74, 0.35), 0 6px 18px rgba(22, 163, 74, 0.22);
+  }
+}
+
+@keyframes otpShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
+
+@keyframes successPop {
+  0% { transform: scale(0.5) rotate(-15deg); opacity: 0; }
+  70% { transform: scale(1.15) rotate(5deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes ringExpand {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 0.3; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+.otp-box-input {
+  width: 52px;
+  height: 64px;
+  border-radius: 14px;
+  border: 2px solid #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 28px;
+  font-weight: 800;
+  font-family: 'Inter', monospace;
+  text-align: center;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.otp-box-input:hover {
+  border-color: #94a3b8;
+  transform: translateY(-1px);
+}
+
+.otp-box-input:focus {
+  border-color: #16a34a;
+  background: #f0fdf4;
+  color: #15803d;
+  animation: otpBoxGlow 2s infinite ease-in-out;
+  transform: translateY(-2px) scale(1.04);
+}
+
+.otp-box-input.filled {
+  border-color: #16a34a;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.otp-box-input.digit-animated {
+  animation: otpPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.otp-shake {
+  animation: otpShake 0.45s ease-in-out;
+}
+
+.success-pop {
+  animation: successPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.pulse-ring-element {
+  animation: ringExpand 2.5s ease-in-out infinite;
+}
+

@@ -15,6 +15,7 @@ import QRVerifyPage from './pages/QRVerifyPage';
 // Auth & 4 Role Dashboards
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import VerifyOtpPage from './pages/VerifyOtpPage';
 import UserDashboard from './pages/UserDashboard';
 import RegisterOfficeDashboard from './pages/RegisterOfficeDashboard';
 import AcLandDashboard from './pages/AcLandDashboard';
@@ -62,6 +63,7 @@ function App() {
             {/* Auth Single Login & Register */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/verify-otp" element={<VerifyOtpPage />} />
 
             {/* 4 Separate Dashboards Based on Role */}
             <Route

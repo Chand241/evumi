@@ -1,8 +1,19 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
-import { UserPlus, ArrowRight, AlertCircle, CheckCircle, ShieldCheck, Mail, Key, ArrowLeft, RefreshCw, Send, MapPin } from 'lucide-react';
+import {
+  UserPlus,
+  ArrowRight,
+  AlertCircle,
+  CheckCircle,
+  ShieldCheck,
+  Mail,
+  Lock,
+  Phone,
+  User,
+  MapPin,
+  Send
+} from 'lucide-react';
 import {
   BANGLADESH_DIVISIONS,
   getDistrictsForDivision,
@@ -11,36 +22,31 @@ import {
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-  const { verifyAndRegister } = useAuth();
+  const location = useLocation();
+  const prefill = location.state || {};
 
-  // Initial administrative defaults: রাজশাহী > বগুড়া > শিবগঞ্জ
-  const initialDivision = 'রাজশাহী';
+  // Administrative cascaded defaults: রাজশাহী > বগুড়া > শিবগঞ্জ
+  const initialDivision = prefill.division || 'রাজশাহী';
   const initialDistricts = getDistrictsForDivision(initialDivision);
-  const initialDistrict = 'বগুড়া';
+  const initialDistrict = prefill.district || 'বগুড়া';
   const initialUpazilas = getUpazilasForDistrict(initialDistrict);
-  const initialUpazila = 'শিবগঞ্জ';
+  const initialUpazila = prefill.upazila || 'শিবগঞ্জ';
 
   const [formData, setFormData] = useState({
-    name: '',
-    father_name: '',
-    mother_name: '',
-    nid: '',
+    name: prefill.name || '',
+    father_name: prefill.father_name || '',
+    mother_name: prefill.mother_name || '',
+    nid: prefill.nid || '',
     division: initialDivision,
     district: initialDistrict,
     upazila: initialUpazila,
-    phone: '',
-    email: '',
-    password: ''
+    phone: prefill.phone || '',
+    email: prefill.email || '',
+    password: prefill.password || ''
   });
 
   const [districtsList, setDistrictsList] = useState(initialDistricts);
   const [upazilasList, setUpazilasList] = useState(initialUpazilas);
-
-  // OTP Verification Step State: 'FORM' | 'OTP'
-  const [step, setStep] = useState('FORM');
-  const [otp, setOtp] = useState('');
-  const [previewOtp, setPreviewOtp] = useState(null);
-  const [otpMessage, setOtpMessage] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -94,160 +100,152 @@ export default function RegisterPage() {
     }));
   };
 
-  // Step 1: Send OTP to User's Email
-  const handleSendOtp = async (e) => {
+  // Step 1: Send Registration OTP & Navigate to /verify-otp
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-    setLoading(true);
 
-    try {
-      const res = await axios.post('/api/otp/send-registration-otp', {
-        email: formData.email,
-        nid: formData.nid,
-        name: formData.name
-      });
-
-      if (res.data.success) {
-        setOtpMessage(res.data.message);
-        if (res.data.previewOtp) {
-          setPreviewOtp(res.data.previewOtp);
-        } else {
-          setPreviewOtp(null);
-        }
-        setStep('OTP');
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || 'ওটিপি পাঠাতে সমস্যা হয়েছে।');
-    } finally {
-      setLoading(false);
+    // Validations
+    if (!formData.name.trim() || !formData.father_name.trim() || !formData.mother_name.trim()) {
+      setError('অনুগ্রহ করে নাম, পিতার নাম এবং মাতার নাম সঠিকভাবে পূরণ করুন।');
+      return;
     }
-  };
-
-  // Resend OTP
-  const handleResendOtp = async () => {
-    setError(null);
-    setLoading(true);
-    try {
-      const res = await axios.post('/api/otp/send-registration-otp', {
-        email: formData.email,
-        nid: formData.nid,
-        name: formData.name
-      });
-      if (res.data.success) {
-        setOtpMessage(res.data.message);
-        if (res.data.previewOtp) {
-          setPreviewOtp(res.data.previewOtp);
-        }
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || 'ওটিপি পুনরায় পাঠাতে ব্যর্থ হয়েছে।');
-    } finally {
-      setLoading(false);
+    if (formData.nid.trim().length < 10) {
+      setError('জাতীয় পরিচয়পত্র (NID) নম্বর ১০, ১৩ অথবা ১৭ ডিজিটের হতে হবে।');
+      return;
     }
-  };
-
-  // Step 2: Verify OTP and finalize registration
-  const handleVerifyOtpAndRegister = async (e) => {
-    e.preventDefault();
-    if (!otp || otp.trim().length !== 6) {
-      setError('অনুগ্রহ করে সঠিক ৬ ডিজিটের ওটিপি প্রদান করুন।');
+    if (formData.phone.trim().length < 11) {
+      setError('১১ ডিজিটের সঠিক মোবাইল নম্বর প্রদান করুন।');
+      return;
+    }
+    if (formData.password.length < 6) {
+      setError('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।');
       return;
     }
 
-    setError(null);
     setLoading(true);
 
     try {
-      await verifyAndRegister({
-        ...formData,
-        otp: otp.trim()
+      const res = await axios.post('/api/otp/send-registration-otp', {
+        email: formData.email.trim().toLowerCase(),
+        nid: formData.nid.trim(),
+        name: formData.name.trim()
       });
-      navigate('/user/dashboard');
+
+      if (res.data.success) {
+        const payload = {
+          ...formData,
+          email: formData.email.trim().toLowerCase(),
+          nid: formData.nid.trim(),
+          name: formData.name.trim(),
+          previewOtp: res.data.previewOtp || null,
+          otpMessage: res.data.message
+        };
+
+        // Cache in sessionStorage for persistence across refresh
+        sessionStorage.setItem('pending_registration', JSON.stringify(payload));
+
+        // Navigate immediately to the dedicated OTP submission page
+        navigate('/verify-otp', { state: payload });
+      }
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'ওটিপি যাচাই ও নিবন্ধন ব্যর্থ হয়েছে।');
+      const errorMsg = err.response?.data?.message || err.message || 'ওটিপি পাঠাতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।';
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: '850px', margin: '40px auto', padding: '0 20px' }}>
-      <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-        <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '6px 16px',
-          borderRadius: '999px',
-          background: 'rgba(34, 197, 94, 0.12)',
-          border: '1px solid rgba(34, 197, 94, 0.3)',
-          color: '#86efac',
-          fontSize: '13px',
-          fontWeight: '600',
-          marginBottom: '12px'
-        }}>
-          <ShieldCheck size={14} /> বাংলাদেশ ভূমি প্রশাসন · সুরক্ষিত নাগরিক নিবন্ধন
-        </div>
-        <h1 style={{ fontSize: '30px', fontWeight: '800', color: '#f8fafc', marginBottom: '8px' }}>
-          নতুন নাগরিক অ্যাকাউন্ট তৈরি করুন
-        </h1>
-        <p style={{ color: '#94a3b8', fontSize: '14px' }}>
-          {step === 'FORM'
-            ? 'সকল তথ্য পূরণ করুন। নিবন্ধনের জন্য আপনার ব্যক্তিগত ইমেইলে একটি ভেরিফিকেশন কোড পাঠানো হবে।'
-            : `আপনার ইমেইল (${formData.email}) এ প্রেরিত ৬ ডিজিটের ওটিপি যাচাই করুন।`}
-        </p>
-      </div>
+    <div style={{
+      minHeight: 'calc(100vh - 64px)',
+      background: '#f0f4f8',
+      padding: '40px 20px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
+      <div style={{ maxWidth: '820px', width: '100%' }} className="animate-fade-in-up">
 
-      <div className="glass-card" style={{ padding: '36px' }}>
-        {error && (
+        {/* Top Header */}
+        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
           <div style={{
-            padding: '12px 16px',
-            background: 'rgba(239, 68, 68, 0.12)',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
-            borderRadius: '8px',
-            color: '#fca5a5',
-            fontSize: '13px',
-            marginBottom: '20px',
-            display: 'flex',
+            display: 'inline-flex',
             alignItems: 'center',
-            gap: '8px'
+            gap: '8px',
+            padding: '5px 16px',
+            borderRadius: '999px',
+            background: '#ecfdf5',
+            border: '1px solid #a7f3d0',
+            color: '#15803d',
+            fontSize: '12px',
+            fontWeight: '700',
+            marginBottom: '12px'
           }}>
-            <AlertCircle size={16} />
-            {error}
+            <ShieldCheck size={14} /> বাংলাদেশ ভূমি প্রশাসন · সুরক্ষিত নাগরিক নিবন্ধন
           </div>
-        )}
+          <h1 style={{ fontSize: '26px', fontWeight: '800', color: '#0f172a', marginBottom: '8px' }}>
+            নতুন নাগরিক অ্যাকাউন্ট তৈরি করুন
+          </h1>
+          <p style={{ color: '#64748b', fontSize: '14px', maxWidth: '580px', margin: '0 auto', lineHeight: 1.6 }}>
+            তথ্য পূরণ করে সাবমিট করুন। পরবর্তী ধাপে আপনার ইমেইলে প্রেরিত ৬ ডিজিটের ওটিপি যাচাই করে অ্যাকাউন্ট সক্রিয় হবে।
+          </p>
+        </div>
 
-        {/* ================= STEP 1: REGISTRATION FORM ================= */}
-        {step === 'FORM' && (
-          <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {/* Form Card */}
+        <div className="glass-card" style={{ padding: '36px', boxShadow: '0 10px 30px rgba(0,0,0,0.06)' }}>
+
+          {/* Error Banner */}
+          {error && (
+            <div style={{
+              padding: '12px 16px',
+              background: '#fee2e2',
+              border: '1px solid #fca5a5',
+              borderRadius: '10px',
+              color: '#b91c1c',
+              fontSize: '13px',
+              marginBottom: '22px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}>
+              <AlertCircle size={18} style={{ flexShrink: 0 }} />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
             {/* Row 1: Full Name & NID */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '18px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '13px', color: '#cbd5e1', marginBottom: '6px', fontWeight: '500' }}>
-                  নাগরিকের পূর্ণ নাম (Name) <span style={{ color: '#ef4444' }}>*</span>
+                <label style={{ display: 'block', fontSize: '13px', color: '#334155', marginBottom: '6px', fontWeight: '600' }}>
+                  নাগরিকের পূর্ণ নাম (Name) <span style={{ color: '#dc2626' }}>*</span>
                 </label>
-                <input
-                  type="text"
-                  name="name"
-                  required
-                  className="input-field"
-                  placeholder="যেমন: মো. রহিম উদ্দিন"
-                  value={formData.name}
-                  onChange={handleChange}
-                  style={{ width: '100%' }}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="text"
+                    name="name"
+                    required
+                    className="input-field"
+                    placeholder="যেমন: মো. রহিম উদ্দিন"
+                    value={formData.name}
+                    onChange={handleChange}
+                    style={{ width: '100%', paddingLeft: '14px' }}
+                  />
+                </div>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '13px', color: '#cbd5e1', marginBottom: '6px', fontWeight: '500' }}>
-                  জাতীয় পরিচয়পত্র নম্বর (NID) <span style={{ color: '#ef4444' }}>*</span>
+                <label style={{ display: 'block', fontSize: '13px', color: '#334155', marginBottom: '6px', fontWeight: '600' }}>
+                  জাতীয় পরিচয়পত্র নম্বর (NID) <span style={{ color: '#dc2626' }}>*</span>
                 </label>
                 <input
                   type="text"
                   name="nid"
                   required
                   className="input-field"
-                  placeholder="১০, ১৩ বা ১৭ ডিজিটের এনআইডি"
+                  placeholder="১০ বা ১৭ ডিজিটের এনআইডি"
                   value={formData.nid}
                   onChange={handleChange}
                   style={{ width: '100%' }}
@@ -256,17 +254,17 @@ export default function RegisterPage() {
             </div>
 
             {/* Row 2: Father's Name & Mother's Name */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '18px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '13px', color: '#cbd5e1', marginBottom: '6px', fontWeight: '500' }}>
-                  পিতার নাম (Father's Name) <span style={{ color: '#ef4444' }}>*</span>
+                <label style={{ display: 'block', fontSize: '13px', color: '#334155', marginBottom: '6px', fontWeight: '600' }}>
+                  পিতার নাম (Father's Name) <span style={{ color: '#dc2626' }}>*</span>
                 </label>
                 <input
                   type="text"
                   name="father_name"
                   required
                   className="input-field"
-                  placeholder="পিতার পূর্ণ নাম"
+                  placeholder="পিতার পূর্ণ নাম লিখুন"
                   value={formData.father_name}
                   onChange={handleChange}
                   style={{ width: '100%' }}
@@ -274,15 +272,15 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '13px', color: '#cbd5e1', marginBottom: '6px', fontWeight: '500' }}>
-                  মাতার নাম (Mother's Name) <span style={{ color: '#ef4444' }}>*</span>
+                <label style={{ display: 'block', fontSize: '13px', color: '#334155', marginBottom: '6px', fontWeight: '600' }}>
+                  মাতার নাম (Mother's Name) <span style={{ color: '#dc2626' }}>*</span>
                 </label>
                 <input
                   type="text"
                   name="mother_name"
                   required
                   className="input-field"
-                  placeholder="মাতার পূর্ণ নাম"
+                  placeholder="মাতার পূর্ণ নাম লিখুন"
                   value={formData.mother_name}
                   onChange={handleChange}
                   style={{ width: '100%' }}
@@ -290,30 +288,32 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Row 3: Cascading Administrative Location (Division -> District -> Upazila) */}
+            {/* Row 3: Administrative Cascading Selectors */}
             <div style={{
-              background: 'rgba(255, 255, 255, 0.02)',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
               borderRadius: '12px',
-              padding: '16px',
+              padding: '18px',
               display: 'flex',
               flexDirection: 'column',
               gap: '12px'
             }}>
-              <div style={{ fontSize: '13px', fontWeight: '700', color: '#4ade80', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <MapPin size={15} /> প্রশাসনিক ভৌগোলিক অবস্থান নির্বাচন (বাংলাদেশ)
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '700', color: '#0f172a' }}>
+                <MapPin size={16} style={{ color: '#16a34a' }} /> স্থায়ী প্রশাসনিক এলাকা নির্বাচন
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
+                {/* Division */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px', fontWeight: '500' }}>
-                    ১. বিভাগ (Division) <span style={{ color: '#ef4444' }}>*</span>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#64748b', marginBottom: '4px', fontWeight: '600' }}>
+                    বিভাগ (Division) <span style={{ color: '#dc2626' }}>*</span>
                   </label>
                   <select
-                    className="input-field"
+                    name="division"
                     value={formData.division}
                     onChange={handleDivisionChange}
-                    style={{ width: '100%' }}
+                    className="input-field"
+                    style={{ width: '100%', cursor: 'pointer' }}
                   >
                     {BANGLADESH_DIVISIONS.map(div => (
                       <option key={div} value={div}>{div}</option>
@@ -321,15 +321,17 @@ export default function RegisterPage() {
                   </select>
                 </div>
 
+                {/* District */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px', fontWeight: '500' }}>
-                    ২. জেলা (District) <span style={{ color: '#ef4444' }}>*</span>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#64748b', marginBottom: '4px', fontWeight: '600' }}>
+                    জেলা (District) <span style={{ color: '#dc2626' }}>*</span>
                   </label>
                   <select
-                    className="input-field"
+                    name="district"
                     value={formData.district}
                     onChange={handleDistrictChange}
-                    style={{ width: '100%' }}
+                    className="input-field"
+                    style={{ width: '100%', cursor: 'pointer' }}
                   >
                     {districtsList.map(dist => (
                       <option key={dist} value={dist}>{dist}</option>
@@ -337,15 +339,17 @@ export default function RegisterPage() {
                   </select>
                 </div>
 
+                {/* Upazila */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px', fontWeight: '500' }}>
-                    ৩. উপজেলা (Upazila) <span style={{ color: '#ef4444' }}>*</span>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#64748b', marginBottom: '4px', fontWeight: '600' }}>
+                    উপজেলা (Upazila) <span style={{ color: '#dc2626' }}>*</span>
                   </label>
                   <select
-                    className="input-field"
+                    name="upazila"
                     value={formData.upazila}
                     onChange={handleUpazilaChange}
-                    style={{ width: '100%' }}
+                    className="input-field"
+                    style={{ width: '100%', cursor: 'pointer' }}
                   >
                     {upazilasList.map(upz => (
                       <option key={upz} value={upz}>{upz}</option>
@@ -356,10 +360,10 @@ export default function RegisterPage() {
             </div>
 
             {/* Row 4: Phone & Email */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '18px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '13px', color: '#cbd5e1', marginBottom: '6px', fontWeight: '500' }}>
-                  মোবাইল নম্বর (Phone) <span style={{ color: '#ef4444' }}>*</span>
+                <label style={{ display: 'block', fontSize: '13px', color: '#334155', marginBottom: '6px', fontWeight: '600' }}>
+                  মোবাইল নম্বর (Phone) <span style={{ color: '#dc2626' }}>*</span>
                 </label>
                 <input
                   type="tel"
@@ -374,8 +378,8 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '13px', color: '#cbd5e1', marginBottom: '6px', fontWeight: '500' }}>
-                  ব্যক্তিগত ইমেইল (Email) <span style={{ color: '#ef4444' }}>* (ওটিপি পাঠানো হবে)</span>
+                <label style={{ display: 'block', fontSize: '13px', color: '#334155', marginBottom: '6px', fontWeight: '600' }}>
+                  ইমেইল ঠিকানা (Email) <span style={{ color: '#dc2626' }}>*</span>
                 </label>
                 <input
                   type="email"
@@ -385,42 +389,48 @@ export default function RegisterPage() {
                   placeholder="yourname@gmail.com"
                   value={formData.email}
                   onChange={handleChange}
-                  style={{ width: '100%', borderColor: 'rgba(59, 130, 246, 0.4)' }}
+                  style={{ width: '100%', borderColor: '#93c5fd' }}
                 />
+                <span style={{ fontSize: '11px', color: '#64748b', marginTop: '4px', display: 'block' }}>
+                  ✉️ এই ইমেইলে তাৎক্ষণিক ৬ ডিজিটের ওটিপি কোড পাঠানো হবে।
+                </span>
               </div>
             </div>
 
             {/* Row 5: Password */}
             <div>
-              <label style={{ display: 'block', fontSize: '13px', color: '#cbd5e1', marginBottom: '6px', fontWeight: '500' }}>
-                পাসওয়ার্ড (Password) <span style={{ color: '#ef4444' }}>*</span>
+              <label style={{ display: 'block', fontSize: '13px', color: '#334155', marginBottom: '6px', fontWeight: '600' }}>
+                পাসওয়ার্ড (Password) <span style={{ color: '#dc2626' }}>*</span>
               </label>
               <input
                 type="password"
                 name="password"
                 required
                 className="input-field"
-                placeholder="কমপক্ষে ৬ ডিজিটের পাসওয়ার্ড"
+                placeholder="কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড"
                 value={formData.password}
                 onChange={handleChange}
                 style={{ width: '100%' }}
               />
             </div>
 
+            {/* Notice */}
             <div style={{
-              background: 'rgba(34, 197, 94, 0.08)',
-              border: '1px solid rgba(34, 197, 94, 0.2)',
-              borderRadius: '8px',
+              background: '#ecfdf5',
+              border: '1px solid #a7f3d0',
+              borderRadius: '10px',
               padding: '12px 16px',
               fontSize: '12px',
-              color: '#86efac',
+              color: '#15803d',
               display: 'flex',
               alignItems: 'center',
               gap: '8px'
             }}>
-              <CheckCircle size={16} /> পরবর্তী ধাপে আপনার ইমেইলে প্রেরিত ৬ ডিজিটের ওটিপি কোড যাচাই করা হবে।
+              <CheckCircle size={16} style={{ flexShrink: 0 }} />
+              <span>নিবন্ধন বাটনে ক্লিক করলে সরাসরি ওটিপি জমা দেওয়ার পেজে নিয়ে যাওয়া হবে।</span>
             </div>
 
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
@@ -431,172 +441,41 @@ export default function RegisterPage() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
-                fontSize: '15px',
-                marginTop: '6px'
+                fontSize: '16px',
+                fontWeight: '700',
+                borderRadius: '12px',
+                marginTop: '4px',
+                cursor: loading ? 'not-allowed' : 'pointer'
               }}
             >
-              <Send size={18} />
-              {loading ? 'ওটিপি পাঠানো হচ্ছে...' : 'ইমেইল ওটিপি পাঠান ও নিবন্ধন এগিয়ে নিন'}
+              {loading ? (
+                <>
+                  <span className="spinner" style={{ width: '18px', height: '18px' }}></span>
+                  ওটিপি কোড পাঠানো হচ্ছে...
+                </>
+              ) : (
+                <>
+                  <Send size={18} />
+                  নিবন্ধন করুন ও ওটিপি যাচাই পেজে যান
+                </>
+              )}
             </button>
           </form>
-        )}
 
-        {/* ================= STEP 2: EMAIL OTP VERIFICATION ================= */}
-        {step === 'OTP' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }} className="animate-fade-in-up">
-            <div style={{ textAlign: 'center', padding: '16px 0' }}>
-              <div style={{
-                width: '64px',
-                height: '64px',
-                borderRadius: '50%',
-                background: 'rgba(34, 197, 94, 0.15)',
-                border: '2px solid rgba(34, 197, 94, 0.4)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 16px',
-                fontSize: '28px'
-              }}>
-                📨
-              </div>
-              <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#f8fafc', marginBottom: '8px' }}>
-                ইমেইল ওটিপি যাচাইকরণ
-              </h2>
-              <p style={{ color: '#94a3b8', fontSize: '14px', maxWidth: '500px', margin: '0 auto', lineHeight: 1.6 }}>
-                আপনার ব্যক্তিগত ইমেইল <strong>{formData.email}</strong> এ একটি ৬ ডিজিটের ভেরিফিকেশন কোড পাঠানো হয়েছে।
-              </p>
-            </div>
-
-            {otpMessage && (
-              <div style={{
-                padding: '12px 16px',
-                background: 'rgba(34, 197, 94, 0.1)',
-                border: '1px solid rgba(34, 197, 94, 0.25)',
-                borderRadius: '8px',
-                color: '#86efac',
-                fontSize: '13px',
-                textAlign: 'center'
-              }}>
-                {otpMessage}
-              </div>
-            )}
-
-            {previewOtp && (
-              <div style={{
-                padding: '14px',
-                background: 'rgba(245, 158, 11, 0.1)',
-                border: '1px dashed rgba(245, 158, 11, 0.4)',
-                borderRadius: '8px',
-                color: '#fcd34d',
-                fontSize: '13px',
-                textAlign: 'center'
-              }}>
-                💡 <strong>সিমুলেশন মোড ওটিপি:</strong> <span style={{ fontSize: '18px', fontWeight: '800', letterSpacing: '2px' }}>{previewOtp}</span>
-                <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.85 }}>
-                  (আপনার পার্সোনাল জিমেইল .env এ কনফিগার করলে সরাসরি ইনবক্সে আসবে)
-                </div>
-              </div>
-            )}
-
-            <form onSubmit={handleVerifyOtpAndRegister} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', color: '#cbd5e1', marginBottom: '8px', fontWeight: '600', textAlign: 'center' }}>
-                  ৬ ডিজিটের ওটিপি কোড লিখুন
-                </label>
-                <input
-                  type="text"
-                  maxLength={6}
-                  required
-                  autoFocus
-                  placeholder="******"
-                  className="input-field"
-                  value={otp}
-                  onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
-                  style={{
-                    width: '100%',
-                    maxWidth: '300px',
-                    margin: '0 auto',
-                    display: 'block',
-                    textAlign: 'center',
-                    fontSize: '28px',
-                    letterSpacing: '12px',
-                    fontWeight: '800',
-                    color: '#4ade80',
-                    fontFamily: 'monospace'
-                  }}
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading || otp.length !== 6}
-                className="btn-primary"
-                style={{
-                  padding: '14px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  fontSize: '16px'
-                }}
-              >
-                <Key size={18} />
-                {loading ? 'যাচাই হচ্ছে...' : 'ওটিপি যাচাই ও নাগরিক অ্যাকাউন্ট নিশ্চিত করুন'}
-              </button>
-            </form>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
-              <button
-                type="button"
-                onClick={() => setStep('FORM')}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: '#94a3b8',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
-              >
-                <ArrowLeft size={14} /> তথ্য সংশোধন করুন
-              </button>
-
-              <button
-                type="button"
-                onClick={handleResendOtp}
-                disabled={loading}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: '#38bdf8',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  fontWeight: '600'
-                }}
-              >
-                <RefreshCw size={14} /> পুনরায় ওটিপি পাঠান
-              </button>
-            </div>
+          {/* Already have an account */}
+          <div style={{
+            marginTop: '24px',
+            paddingTop: '20px',
+            borderTop: '1px solid #e2e8f0',
+            textAlign: 'center',
+            fontSize: '13px',
+            color: '#64748b'
+          }}>
+            ইতিমধ্যে অ্যাকাউন্ট আছে?{' '}
+            <Link to="/login" style={{ color: '#16a34a', fontWeight: '700', textDecoration: 'none' }}>
+              লগইন করুন
+            </Link>
           </div>
-        )}
-
-        <div style={{
-          marginTop: '24px',
-          paddingTop: '20px',
-          borderTop: '1px solid rgba(255,255,255,0.08)',
-          textAlign: 'center',
-          fontSize: '13px',
-          color: '#94a3b8'
-        }}>
-          ইতিমধ্যে অ্যাকাউন্ট আছে?{' '}
-          <Link to="/login" style={{ color: '#4ade80', fontWeight: '600', textDecoration: 'none' }}>
-            লগইন করুন
-          </Link>
         </div>
       </div>
     </div>
