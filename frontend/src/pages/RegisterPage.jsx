@@ -149,7 +149,10 @@ export default function RegisterPage() {
         navigate('/verify-otp', { state: payload });
       }
     } catch (err) {
-      const errorMsg = err.response?.data?.message || err.message || 'ওটিপি পাঠাতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।';
+      const errorMsg = err.response?.data?.message
+        || (err.response?.status === 500 ? 'সার্ভারে সাময়িক সমস্যা হয়েছে। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।' : null)
+        || (err.message && !err.message.includes('status code') ? err.message : null)
+        || 'ওটিপি পাঠাতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।';
       setError(errorMsg);
     } finally {
       setLoading(false);

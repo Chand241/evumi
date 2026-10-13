@@ -227,7 +227,10 @@ export default function VerifyOtpPage() {
         }, 1800);
       }
     } catch (err) {
-      const errMsg = err.response?.data?.message || err.message || 'ভুল ওটিপি কোড! অনুগ্রহ করে আবার চেষ্টা করুন।';
+      const errMsg = err.response?.data?.message
+        || (err.response?.status === 500 ? 'সার্ভারে সাময়িক সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।' : null)
+        || (err.message && !err.message.includes('status code') ? err.message : null)
+        || 'ভুল ওটিপি কোড! অনুগ্রহ করে আবার চেষ্টা করুন।';
       setError(errMsg);
       triggerShake();
     } finally {

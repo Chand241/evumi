@@ -1,7 +1,9 @@
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 const User = require('../models/User');
+const { findUserByEmail } = require('../utils/dbStore');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'evhumi_super_secure_secret_2026';
+const JWT_SECRET = process.env.JWT_SECRET || 'evhumi_super_secure_jwt_secret_key_2026_ministry_of_land';
 
 const verifyToken = async (req, res, next) => {
   try {
@@ -13,7 +15,34 @@ const verifyToken = async (req, res, next) => {
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, JWT_SECRET);
 
-    const user = await User.findById(decoded.id).select('-password');
+    // 1. Virtual / Environment Super Admin bypass
+    if (decoded.id === 'env_super_admin' || decoded.role === 'Super Admin') {
+      req.user = {
+        _id: 'env_super_admin',
+        name: decoded.name || process.env.SUPER_ADMIN_NAME || 'মন্ত্রণালয় প্রধান এডমিন',
+        email: decoded.email || process.env.SUPER_ADMIN_EMAIL,
+        role: 'Super Admin',
+        status: 'Active',
+        nid: '0000000000000',
+        office_details: {
+          office_name: 'ভূমি মন্ত্রণালয়, বাংলাদেশ সচিবালয়',
+          designation: 'যুগ্ম সচিব (প্রশাসন)'
+        }
+      };
+      return next();
+    }
+
+    // 2. Look up user by email from resilient store (supports Atlas + memory fallback)
+    let user = null;
+    if (decoded.email) {
+      user = await findUserByEmail(decoded.email);
+    }
+
+    // 3. Fallback to direct DB findById if valid ObjectId
+    if (!user && decoded.id && mongoose.Types.ObjectId.isValid(decoded.id)) {
+      user = await User.findById(decoded.id).select('-password');
+    }
+
     if (!user) {
       return res.status(401).json({ success: false, message: 'ব্যবহারকারী খুঁজে পাওয়া যায়নি।' });
     }
@@ -22,7 +51,8 @@ const verifyToken = async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'আপনার অ্যাকাউন্টটি স্থগিত (Blocked) করা হয়েছে।' });
     }
 
-    req.user = user;
+    req.user = user.toObject ? user.toObject() : user;
+    delete req.user.password;
     next();
   } catch (err) {
     return res.status(401).json({ success: false, message: 'টোকেন মেয়াদোত্তীর্ণ বা অবৈধ।' });

@@ -32,9 +32,13 @@ export default function LoginPage() {
     try {
       const res = await login(email.trim().toLowerCase(), password);
       const targetRoute = getDashboardRoute(res.user.role);
-      navigate(targetRoute);
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'ভুল ইমেইল বা পাসওয়ার্ড!');
+      const msg = err.response?.data?.message
+        || (err.response?.status === 500 ? 'সার্ভারে সাময়িক সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।' : null)
+        || (err.response?.status === 401 ? 'ভুল ইমেইল বা পাসওয়ার্ড!' : null)
+        || (err.message && !err.message.includes('status code') ? err.message : null)
+        || 'লগইন ব্যর্থ হয়েছে। অনুগ্রহ করে তথ্য যাচাই করুন।';
+      setError(msg);
     } finally {
       setLoading(false);
     }

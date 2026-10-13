@@ -107,3 +107,6 @@ if (MONGO_URI && !MONGO_URI.includes('xxxxx')) {
   console.log('⚠️  No MongoDB URI configured. Starting with resilient in-memory storage.');
   startServer('In-Memory Mode');
 }
+
+module.exports = app;
+

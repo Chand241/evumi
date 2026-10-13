@@ -59,19 +59,21 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ success: false, message: 'এই ইমেইল ব্যবহার করা সম্ভব নয়।' });
     }
 
+    const { findUserByEmail, findUserByNid, createCitizenUser } = require('../utils/dbStore');
+
     // Check if NID or Email already exists
-    const existingNid = await User.findOne({ nid });
+    const existingNid = await findUserByNid(nid);
     if (existingNid) {
       return res.status(400).json({ success: false, message: 'এই জাতীয় পরিচয়পত্র (NID) ইতিমধ্যে নিবন্ধিত রয়েছে।' });
     }
 
-    const existingEmail = await User.findOne({ email });
+    const existingEmail = await findUserByEmail(email);
     if (existingEmail) {
       return res.status(400).json({ success: false, message: 'এই ইমেইল ঠিকানাটি ইতিমধ্যে ব্যবহৃত হচ্ছে।' });
     }
 
-    // Create user with default role: 'User'
-    const newUser = new User({
+    // Create user with resilient store (MongoDB or memory fallback)
+    const newUser = await createCitizenUser({
       name,
       father_name,
       mother_name,
@@ -81,16 +83,12 @@ router.post('/register', async (req, res) => {
       upazila,
       phone,
       email,
-      password,
-      role: 'User',
-      status: 'Active'
+      password
     });
-
-    await newUser.save();
 
     const token = generateToken(newUser);
 
-    const userObj = newUser.toObject();
+    const userObj = newUser.toObject ? newUser.toObject() : { ...newUser };
     delete userObj.password;
 
     return res.status(201).json({
