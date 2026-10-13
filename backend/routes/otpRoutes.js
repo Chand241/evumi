@@ -89,11 +89,18 @@ router.post('/send-registration-otp', async (req, res) => {
     // Dispatch Email
     const emailResult = await sendOtpEmail(cleanEmail, otp, 'ACCOUNT_REGISTRATION', { citizen_name: name });
 
+    const isEmailDelivered = !emailResult.simulated;
+    const responseMessage = isEmailDelivered
+      ? `আপনার ইমেইল (${cleanEmail}) এ একটি ৬ ডিজিটের ভেরিফিকেশন ওটিপি পাঠানো হয়েছে।`
+      : `ওটিপি তৈরি হয়েছে। ইমেইল ডেলিভারি সমস্যার কারণে ওটিপি সরাসরি দেখানো হচ্ছে।`;
+
     return res.status(200).json({
       success: true,
-      message: `আপনার ইমেইল (${cleanEmail}) এ একটি ৬ ডিজিটের ভেরিফিকেশন ওটিপি পাঠানো হয়েছে।`,
+      message: responseMessage,
       simulated: emailResult.simulated || false,
-      previewOtp: (emailResult.simulated || !process.env.EMAIL_USER || process.env.EMAIL_USER === 'your_email@gmail.com') ? otp : undefined
+      emailError: emailResult.emailError || null,
+      // Always show OTP if email couldn't be delivered (simulated or SMTP error)
+      previewOtp: emailResult.simulated ? otp : undefined
     });
   } catch (err) {
     console.error('Send registration OTP error:', err);
