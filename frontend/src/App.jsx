@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
@@ -23,7 +23,7 @@ import MinistryAdminDashboard from './pages/MinistryAdminDashboard';
 
 function App() {
   return (
-    <BrowserRouter>
+    <Router>
       <AuthProvider>
         <div className="min-h-screen animated-bg grid-bg">
           <Navbar />
@@ -107,7 +107,7 @@ function App() {
           </Routes>
         </div>
       </AuthProvider>
-    </BrowserRouter>
+    </Router>
   );
 }
 
