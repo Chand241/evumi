@@ -1,0 +1,492 @@
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+/* ============================================================
+   e-ভূমি Design System — Light Mode (Government Standard)
+   ============================================================ */
+
+:root {
+  color-scheme: light;
+
+  /* Brand Colors */
+  --primary:       #1a6b3c;
+  --primary-hover: #155c32;
+  --primary-light: #dcfce7;
+  --primary-mid:   #16a34a;
+  --secondary:     #1d4ed8;
+  --secondary-light: #eff6ff;
+  --accent:        #b45309;
+  --accent-light:  #fef3c7;
+  --danger:        #dc2626;
+  --danger-light:  #fee2e2;
+  --warning:       #d97706;
+  --warning-light: #fef9c3;
+  --safe:          #16a34a;
+  --safe-light:    #dcfce7;
+
+  /* Surface & Background */
+  --bg-page:    #f0f4f8;
+  --bg-card:    #ffffff;
+  --bg-surface: #f8fafc;
+  --bg-muted:   #f1f5f9;
+
+  /* Borders */
+  --border:         #e2e8f0;
+  --border-strong:  #cbd5e1;
+  --border-primary: rgba(26, 107, 60, 0.3);
+
+  /* Text */
+  --text-primary:   #0f172a;
+  --text-secondary: #475569;
+  --text-muted:     #94a3b8;
+  --text-inverse:   #ffffff;
+
+  /* Shadows */
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06);
+  --shadow-lg:  0 10px 30px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06);
+  --shadow-xl:  0 20px 50px rgba(0,0,0,0.14);
+
+  /* Signal Glow (softer for light mode) */
+  --glow-green:  0 4px 20px rgba(22, 163, 74, 0.18);
+  --glow-red:    0 4px 20px rgba(220, 38, 38, 0.18);
+  --glow-yellow: 0 4px 20px rgba(217, 119, 6, 0.18);
+}
+
+/* ============================================================
+   Reset & Base
+   ============================================================ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', 'Hind Siliguri', sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-muted); }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ============================================================
+   Layout Utilities
+   ============================================================ */
+
+/* Page wrapper background */
+.animated-bg {
+  background: var(--bg-page);
+}
+
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(15, 23, 42, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 23, 42, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ============================================================
+   Cards
+   ============================================================ */
+.glass-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+  transition: box-shadow 0.2s ease;
+}
+
+.glass-card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.glass-card-light {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ============================================================
+   Typography
+   ============================================================ */
+.gradient-text-green {
+  background: linear-gradient(135deg, #1a6b3c, #16a34a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-blue {
+  background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-gold {
+  background: linear-gradient(135deg, #b45309, #d97706);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================================
+   Buttons
+   ============================================================ */
+.btn-primary {
+  background: linear-gradient(135deg, #1a6b3c, #16a34a);
+  color: #ffffff;
+  padding: 11px 24px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(26, 107, 60, 0.35);
+  font-family: 'Inter', 'Hind Siliguri', sans-serif;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #155c32, #15803d);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(26, 107, 60, 0.4);
+}
+
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #b91c1c, #dc2626);
+  color: #ffffff;
+  padding: 11px 24px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+  font-family: 'Inter', 'Hind Siliguri', sans-serif;
+}
+
+.btn-danger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.4);
+}
+
+.btn-secondary {
+  background: #ffffff;
+  color: var(--text-primary);
+  padding: 11px 24px;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  font-family: 'Inter', 'Hind Siliguri', sans-serif;
+}
+
+.btn-secondary:hover {
+  background: var(--bg-muted);
+  border-color: #94a3b8;
+  transform: translateY(-1px);
+}
+
+.btn-gold {
+  background: linear-gradient(135deg, #92400e, #b45309);
+  color: #ffffff;
+  padding: 11px 24px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(180, 83, 9, 0.3);
+  font-family: 'Inter', 'Hind Siliguri', sans-serif;
+}
+
+.btn-gold:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(180, 83, 9, 0.4);
+}
+
+.btn-blue {
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
+  color: #ffffff;
+  padding: 11px 24px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+  font-family: 'Inter', 'Hind Siliguri', sans-serif;
+}
+
+.btn-blue:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4);
+}
+
+/* ============================================================
+   Inputs & Form Controls
+   ============================================================ */
+.input-field,
+input.input-field,
+select.input-field,
+select,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+textarea {
+  color-scheme: light !important;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1.5px solid var(--border-strong) !important;
+  border-radius: 8px;
+  font-family: 'Inter', 'Hind Siliguri', sans-serif;
+  outline: none;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.input-field {
+  width: 100%;
+  padding: 10px 14px;
+}
+
+.input-field:focus,
+select:focus,
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="tel"]:focus,
+textarea:focus {
+  background-color: #ffffff !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(26, 107, 60, 0.12) !important;
+  color: #0f172a !important;
+}
+
+.input-field::placeholder,
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* Dropdown options */
+select option,
+select optgroup {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  font-family: 'Inter', 'Hind Siliguri', sans-serif !important;
+  font-size: 14px !important;
+}
+
+select option:checked {
+  background-color: var(--primary-light) !important;
+  color: var(--primary) !important;
+  font-weight: 600 !important;
+}
+
+/* ============================================================
+   Badges
+   ============================================================ */
+.badge-active {
+  background: var(--safe-light);
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.badge-pending {
+  background: var(--warning-light);
+  color: #92400e;
+  border: 1px solid #fde68a;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.badge-sold {
+  background: var(--danger-light);
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ============================================================
+   Signal Alerts
+   ============================================================ */
+.signal-safe {
+  background: var(--safe-light);
+  border: 1px solid #86efac;
+  border-radius: 12px;
+  box-shadow: var(--glow-green);
+}
+
+.signal-danger {
+  background: var(--danger-light);
+  border: 1px solid #fca5a5;
+  border-radius: 12px;
+  box-shadow: var(--glow-red);
+}
+
+.signal-warning {
+  background: var(--warning-light);
+  border: 1px solid #fcd34d;
+  border-radius: 12px;
+  box-shadow: var(--glow-yellow);
+}
+
+/* ============================================================
+   Navbar
+   ============================================================ */
+.nav-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s;
+  font-size: 14px;
+}
+
+.nav-link:hover {
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+.nav-link.active {
+  color: var(--primary);
+  background: var(--primary-light);
+  font-weight: 700;
+}
+
+/* ============================================================
+   Data Table
+   ============================================================ */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th {
+  padding: 11px 14px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 2px solid var(--border);
+  background: var(--bg-muted);
+}
+
+.data-table td {
+  padding: 14px;
+  font-size: 14px;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table tr:hover td {
+  background: var(--bg-surface);
+}
+
+/* ============================================================
+   Loading & Animations
+   ============================================================ */
+.loader {
+  width: 22px;
+  height: 22px;
+  border: 3px solid var(--border-strong);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin-slow 0.8s linear infinite;
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-6px); }
+}
+
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.25); }
+  50%       { box-shadow: 0 0 0 8px rgba(22, 163, 74, 0); }
+}
+
+@keyframes pulse-red {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.25); }
+  50%       { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+.animate-float        { animation: float 3s ease-in-out infinite; }
+.animate-fade-in-up   { animation: fadeInUp 0.4s ease-out forwards; }
+.animate-pulse-green  { animation: pulse-green 2s ease-in-out infinite; }
+.animate-pulse-red    { animation: pulse-red 2s ease-in-out infinite; }
+.animate-spin-slow    { animation: spin-slow 10s linear infinite; }
+
+/* ============================================================
+   Progress Steps
+   ============================================================ */
+.step-active {
+  background: linear-gradient(135deg, #1a6b3c, #16a34a);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
+}
+
+.step-done {
+  background: var(--primary-light);
+  color: var(--primary);
+  border: 1.5px solid #86efac;
+}
+
+.step-pending {
+  background: var(--bg-muted);
+  color: var(--text-muted);
+  border: 1.5px solid var(--border-strong);
+}
