@@ -7,6 +7,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  base: '/',
   // SPA mode: all routes serve index.html (fixes 404 on page refresh)
   appType: 'spa',
   server: {
