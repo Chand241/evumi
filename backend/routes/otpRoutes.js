@@ -66,9 +66,22 @@ router.post('/send-registration-otp', async (req, res) => {
     }
 
     const otp = generate6DigitOtp();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
-    // Store OTP in resilient DB/memory
+    // Generate signed stateless OTP verification token (persists across Vercel serverless instances)
+    const otpToken = jwt.sign(
+      {
+        email: cleanEmail,
+        otp: otp.toString().trim(),
+        nid: cleanNid,
+        name: name.trim(),
+        purpose: 'ACCOUNT_REGISTRATION'
+      },
+      JWT_SECRET,
+      { expiresIn: '15m' }
+    );
+
+    // Store OTP in resilient DB/disk/memory
     await createRegistrationOtp(cleanEmail, otp, cleanNid, name, expiresAt);
     console.log(`🔑 [REGISTRATION OTP for ${cleanEmail}]: ${otp}`);
 
@@ -83,6 +96,7 @@ router.post('/send-registration-otp', async (req, res) => {
     return res.status(200).json({
       success: true,
       message: responseMessage,
+      otpToken, // Stateless verification token for seamless multi-instance Vercel support
       simulated: emailResult.simulated || false,
       emailError: emailResult.emailError || null,
       previewOtp: emailResult.simulated ? otp : undefined
@@ -113,7 +127,8 @@ router.post('/verify-and-register', async (req, res) => {
       phone,
       email,
       password,
-      otp
+      otp,
+      otpToken
     } = req.body;
 
     if (!name || !father_name || !mother_name || !nid || !division || !district || !upazila || !phone || !email || !password || !otp) {
@@ -127,44 +142,91 @@ router.post('/verify-and-register', async (req, res) => {
     const cleanNid = nid.trim();
     const cleanOtp = otp.toString().trim();
 
-    // Verify OTP record
-    const otpRecord = await findLatestRegistrationOtp(cleanEmail);
+    console.log(`🔍 [OTP VERIFY] email=${cleanEmail}, otp=${cleanOtp}, hasToken=${!!otpToken}`);
 
-    if (!otpRecord) {
+    let isOtpValid = false;
+
+    // ─────────────────────────────────────────────────────────
+    // STEP 1 (PRIMARY): Verify via signed JWT otpToken
+    // This works even when server restarts or memory resets
+    // ─────────────────────────────────────────────────────────
+    if (otpToken) {
+      try {
+        const decoded = jwt.verify(otpToken, JWT_SECRET);
+        console.log(`🔑 [JWT TOKEN] decoded.email=${decoded.email}, decoded.otp=${decoded.otp}, purpose=${decoded.purpose}`);
+
+        if (
+          decoded.email === cleanEmail &&
+          decoded.purpose === 'ACCOUNT_REGISTRATION'
+        ) {
+          if (decoded.otp === cleanOtp) {
+            isOtpValid = true;
+            console.log('✅ [JWT VERIFY] OTP verified via signed token');
+          } else {
+            console.log(`❌ [JWT VERIFY] OTP mismatch: expected ${decoded.otp}, got ${cleanOtp}`);
+            return res.status(400).json({
+              success: false,
+              message: 'ভুল ওটিপি কোড! অনুগ্রহ করে আপনার ইমেইল চেক করুন।'
+            });
+          }
+        }
+      } catch (jwtErr) {
+        console.warn('⚠️ otpToken validation error:', jwtErr.message);
+        // Token expired or invalid — fall through to DB check
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // STEP 2 (FALLBACK): Check DB / disk / memory record
+    // Used when no otpToken present or token was expired
+    // ─────────────────────────────────────────────────────────
+    if (!isOtpValid) {
+      const otpRecord = await findLatestRegistrationOtp(cleanEmail);
+      console.log(`🗄️ [DB LOOKUP] found=${!!otpRecord}`);
+
+      if (otpRecord) {
+        // Check expiry
+        if (new Date() > new Date(otpRecord.expiresAt)) {
+          return res.status(400).json({
+            success: false,
+            message: 'ওটিপির মেয়াদ শেষ হয়ে গেছে। অনুগ্রহ করে পুনরায় ওটিপি অনুরোধ করুন।'
+          });
+        }
+
+        // Check attempt limit
+        if (otpRecord.attempts >= 5) {
+          return res.status(429).json({
+            success: false,
+            message: 'সর্বোচ্চ ভুল প্রচেষ্টার সীমা অতিক্রম করেছে। পুনরায় ওটিপি কোড পাঠান।'
+          });
+        }
+
+        // Check match
+        if (otpRecord.otp === cleanOtp) {
+          isOtpValid = true;
+          await updateOtpRecord(otpRecord, { verified: true });
+          console.log('✅ [DB VERIFY] OTP verified via database record');
+        } else {
+          const newAttempts = (otpRecord.attempts || 0) + 1;
+          await updateOtpRecord(otpRecord, { attempts: newAttempts });
+          return res.status(400).json({
+            success: false,
+            message: `ভুল ওটিপি কোড! অনুগ্রহ করে আপনার ইমেইল চেক করুন। (বাকি চেষ্টা: ${5 - newAttempts})`
+          });
+        }
+      }
+    }
+
+    if (!isOtpValid) {
+      console.log('❌ [VERIFY FAIL] No valid OTP found via token or DB');
       return res.status(400).json({
         success: false,
         message: 'কোনো সক্রিয় ওটিপি রেকর্ড পাওয়া যায়নি। অনুগ্রহ করে নতুন ওটিপি অনুরোধ করুন।'
       });
     }
 
-    // Check expiry
-    if (new Date() > new Date(otpRecord.expiresAt)) {
-      return res.status(400).json({
-        success: false,
-        message: 'ওটিপির মেয়াদ শেষ হয়ে গেছে। অনুগ্রহ করে পুনরায় ওটিপি অনুরোধ করুন।'
-      });
-    }
-
-    // Check attempt limit
-    if (otpRecord.attempts >= 5) {
-      return res.status(429).json({
-        success: false,
-        message: 'সর্বোচ্চ ভুল প্রচেষ্টার সীমা অতিক্রম করেছে। পুনরায় ওটিপি কোড পাঠান।'
-      });
-    }
-
-    // Check match
-    if (otpRecord.otp !== cleanOtp) {
-      const newAttempts = (otpRecord.attempts || 0) + 1;
-      await updateOtpRecord(otpRecord, { attempts: newAttempts });
-      return res.status(400).json({
-        success: false,
-        message: `ভুল ওটিপি কোড! অনুগ্রহ করে আপনার ইমেইল চেক করুন। (বাকি চেষ্টা: ${5 - newAttempts})`
-      });
-    }
-
-    // Mark verified
-    await updateOtpRecord(otpRecord, { verified: true });
+    // Mark verified and clean up
+    await deleteRegistrationOtps(cleanEmail);
 
     // Re-check unique constraints
     const existingNid = await findUserByNid(cleanNid);
@@ -177,7 +239,7 @@ router.post('/verify-and-register', async (req, res) => {
       return res.status(400).json({ success: false, message: 'এই ইমেইল ঠিকানাটি ইতিমধ্যে নিবন্ধিত।' });
     }
 
-    // Create User safely (MongoDB or memory fallback)
+    // Create User safely (MongoDB Atlas + persistent disk file + memory fallback)
     const newUser = await createCitizenUser({
       name: name.trim(),
       father_name: father_name.trim(),

@@ -138,6 +138,7 @@ export default function RegisterPage() {
           email: formData.email.trim().toLowerCase(),
           nid: formData.nid.trim(),
           name: formData.name.trim(),
+          otpToken: res.data.otpToken || null,
           previewOtp: res.data.previewOtp || null,
           otpMessage: res.data.message
         };

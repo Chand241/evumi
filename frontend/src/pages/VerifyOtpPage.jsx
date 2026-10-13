@@ -172,6 +172,13 @@ export default function VerifyOtpPage() {
         setExpiryCountdown(600);
         setDigits(['', '', '', '', '', '']);
         setResendSuccessMsg('আপনার ইমেইলে নতুন ওটিপি পাঠানো হয়েছে!');
+        if (res.data.otpToken) {
+          setRegData(prev => {
+            const updated = { ...prev, otpToken: res.data.otpToken };
+            sessionStorage.setItem('pending_registration', JSON.stringify(updated));
+            return updated;
+          });
+        }
         if (res.data.previewOtp) {
           setPreviewOtp(res.data.previewOtp);
         }
@@ -208,7 +215,8 @@ export default function VerifyOtpPage() {
     try {
       const res = await axios.post('/api/otp/verify-and-register', {
         ...regData,
-        otp: fullOtp
+        otp: fullOtp,
+        otpToken: regData.otpToken || null
       });
 
       if (res.data.success) {

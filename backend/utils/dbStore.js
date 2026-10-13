@@ -1,42 +1,96 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const fs = require('fs');
+const path = require('path');
 const User = require('../models/User');
 const OtpVerification = require('../models/OtpVerification');
 
 /**
- * Resilient Database Store Helper
- * 
- * Provides fail-safe data access for User and OtpVerification.
- * If MongoDB Atlas is healthy and reachable -> uses MongoDB directly.
- * If MongoDB Atlas fails (IP whitelist issue, network timeout, SSL alert 80) ->
- * seamlessly falls back to in-memory store so the server NEVER crashes with 500.
+ * Resilient Database Store with Multi-Layer Persistence:
+ * Layer 1: MongoDB Atlas (Primary Cloud Store)
+ * Layer 2: Local JSON Disk Persistence (backend/data/store.json)
+ * Layer 3: Memory Store Fallback (cross-request caching)
  */
 
+const DATA_DIR = path.join(__dirname, '..', 'data');
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
+const OTPS_FILE = path.join(DATA_DIR, 'otps.json');
+
+// Ensure data directory exists
+if (!fs.existsSync(DATA_DIR)) {
+  try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch (e) {}
+}
+
+const loadJsonFile = (filePath) => {
+  try {
+    if (fs.existsSync(filePath)) {
+      const data = fs.readFileSync(filePath, 'utf8');
+      return JSON.parse(data);
+    }
+  } catch (err) {
+    console.warn(`Could not read ${filePath}:`, err.message);
+  }
+  return [];
+};
+
+const saveJsonFile = (filePath, items) => {
+  try {
+    fs.writeFileSync(filePath, JSON.stringify(items, null, 2), 'utf8');
+  } catch (err) {
+    console.warn(`Could not write ${filePath}:`, err.message);
+  }
+};
+
+// Initialize in-memory cache from persistent disk storage
 if (!global._memoryUsers) {
-  global._memoryUsers = [];
+  global._memoryUsers = loadJsonFile(USERS_FILE);
 }
 if (!global._memoryOtps) {
-  global._memoryOtps = [];
+  global._memoryOtps = loadJsonFile(OTPS_FILE);
 }
 
 const isDbReady = () => mongoose.connection && mongoose.connection.readyState === 1;
 
 /**
- * Execute a DB query with a strict timeout to avoid hanging when Atlas is unreachable.
+ * Ensure MongoDB Atlas is connected or attempt reconnect
+ */
+const ensureDbConnected = async () => {
+  if (isDbReady()) return true;
+
+  const mongoUri = process.env.MONGODB_URI;
+  if (!mongoUri || mongoUri.includes('xxxxx')) return false;
+
+  try {
+    await mongoose.connect(mongoUri, {
+      serverSelectionTimeoutMS: 4000,
+      connectTimeoutMS: 4000
+    });
+    console.log('✅ MongoDB connected successfully');
+    return true;
+  } catch (err) {
+    return false;
+  }
+};
+
+/**
+ * Execute a DB query with strict timeout
  */
 const safeDbCall = async (fn, fallbackFn) => {
-  if (!isDbReady()) {
+  const ready = await ensureDbConnected();
+  if (!ready) {
     return await fallbackFn();
   }
 
   try {
-    // Run with 2.5 second timeout
     const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('DB_TIMEOUT')), 2500)
+      setTimeout(() => reject(new Error('DB_TIMEOUT')), 3000)
     );
-    return await Promise.race([fn(), timeoutPromise]);
+    const result = await Promise.race([fn(), timeoutPromise]);
+    if (result) return result;
+    // If not found in DB, check fallback
+    return await fallbackFn();
   } catch (err) {
-    console.warn('⚠️ [DB Fallback Active] Database operation failed or timed out:', err.message);
+    console.warn('⚠️ [DB Fallback Active]:', err.message);
     return await fallbackFn();
   }
 };
@@ -50,7 +104,9 @@ const findUserByEmail = async (email) => {
   return safeDbCall(
     () => User.findOne({ email: cleanEmail }),
     () => {
-      const found = global._memoryUsers.find(u => u.email.toLowerCase() === cleanEmail);
+      // Check memory + disk
+      const users = global._memoryUsers.length > 0 ? global._memoryUsers : loadJsonFile(USERS_FILE);
+      const found = users.find(u => u.email && u.email.toLowerCase() === cleanEmail);
       if (!found) return null;
       return {
         ...found,
@@ -66,7 +122,8 @@ const findUserByNid = async (nid) => {
   return safeDbCall(
     () => User.findOne({ nid: cleanNid }),
     () => {
-      const found = global._memoryUsers.find(u => u.nid === cleanNid);
+      const users = global._memoryUsers.length > 0 ? global._memoryUsers : loadJsonFile(USERS_FILE);
+      const found = users.find(u => u.nid === cleanNid);
       if (!found) return null;
       return {
         ...found,
@@ -87,28 +144,36 @@ const createCitizenUser = async (userData) => {
     updatedAt: new Date()
   };
 
-  // Always keep in memory store as backup
-  const memoryUserRecord = {
+  const record = {
     _id: 'usr_' + Date.now() + Math.random().toString(36).substring(2, 7),
     ...userPayload,
     password: hashedPassword
   };
-  global._memoryUsers.push(memoryUserRecord);
 
-  if (isDbReady()) {
+  // 1. Save to in-memory store
+  global._memoryUsers = global._memoryUsers.filter(u => u.email !== userPayload.email);
+  global._memoryUsers.push(record);
+
+  // 2. Save to persistent JSON file on disk
+  saveJsonFile(USERS_FILE, global._memoryUsers);
+
+  // 3. Save to MongoDB Atlas if connected
+  const ready = await ensureDbConnected();
+  if (ready) {
     try {
       const newUser = new User(userPayload);
       await newUser.save();
+      console.log('✅ User successfully persisted to MongoDB Atlas:', newUser.email);
       return newUser;
     } catch (err) {
-      console.warn('⚠️ Could not save user to MongoDB Atlas (saved to memory):', err.message);
+      console.warn('⚠️ Could not save to MongoDB Atlas (saved to persistent disk/memory):', err.message);
     }
   }
 
   return {
-    ...memoryUserRecord,
-    toObject: () => ({ ...memoryUserRecord }),
-    comparePassword: async (pwd) => bcrypt.compare(pwd, memoryUserRecord.password)
+    ...record,
+    toObject: () => ({ ...record }),
+    comparePassword: async (pwd) => bcrypt.compare(pwd, record.password)
   };
 };
 
@@ -117,11 +182,6 @@ const createCitizenUser = async (userData) => {
 // -------------------------------------------------------------
 
 const createRegistrationOtp = async (cleanEmail, otp, cleanNid, name, expiresAt) => {
-  // 1. Remove old unverified registration OTPs from memory
-  global._memoryOtps = global._memoryOtps.filter(
-    o => !(o.email === cleanEmail && o.purpose === 'ACCOUNT_REGISTRATION')
-  );
-
   const otpRecord = {
     _id: 'otp_' + Date.now(),
     email: cleanEmail,
@@ -131,11 +191,21 @@ const createRegistrationOtp = async (cleanEmail, otp, cleanNid, name, expiresAt)
     attempts: 0,
     verified: false,
     createdAt: new Date(),
-    expiresAt
+    expiresAt: new Date(expiresAt)
   };
+
+  // 1. Save to in-memory store
+  global._memoryOtps = global._memoryOtps.filter(
+    o => !(o.email === cleanEmail && o.purpose === 'ACCOUNT_REGISTRATION')
+  );
   global._memoryOtps.push(otpRecord);
 
-  if (isDbReady()) {
+  // 2. Save to persistent JSON file on disk
+  saveJsonFile(OTPS_FILE, global._memoryOtps);
+
+  // 3. Save to MongoDB Atlas if connected
+  const ready = await ensureDbConnected();
+  if (ready) {
     try {
       await OtpVerification.deleteMany({
         email: cleanEmail,
@@ -146,10 +216,11 @@ const createRegistrationOtp = async (cleanEmail, otp, cleanNid, name, expiresAt)
         otp: otpRecord.otp,
         purpose: 'ACCOUNT_REGISTRATION',
         metadata: otpRecord.metadata,
-        expiresAt
+        expiresAt: otpRecord.expiresAt
       });
+      console.log('✅ OTP successfully persisted to MongoDB Atlas:', cleanEmail);
     } catch (err) {
-      console.warn('⚠️ Could not save OTP to MongoDB Atlas (saved to memory):', err.message);
+      console.warn('⚠️ Could not save OTP to MongoDB Atlas (saved to persistent disk/memory):', err.message);
     }
   }
 
@@ -159,15 +230,18 @@ const createRegistrationOtp = async (cleanEmail, otp, cleanNid, name, expiresAt)
 const findLatestRegistrationOtp = async (cleanEmail) => {
   return safeDbCall(
     async () => {
-      return await OtpVerification.findOne({
+      const doc = await OtpVerification.findOne({
         email: cleanEmail,
         purpose: 'ACCOUNT_REGISTRATION'
       }).sort({ createdAt: -1 });
+      return doc;
     },
     () => {
-      const matching = global._memoryOtps
+      // Check memory + disk
+      const otps = global._memoryOtps.length > 0 ? global._memoryOtps : loadJsonFile(OTPS_FILE);
+      const matching = otps
         .filter(o => o.email === cleanEmail && o.purpose === 'ACCOUNT_REGISTRATION')
-        .sort((a, b) => b.createdAt - a.createdAt);
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       return matching[0] || null;
     }
   );
@@ -175,12 +249,15 @@ const findLatestRegistrationOtp = async (cleanEmail) => {
 
 const updateOtpRecord = async (otpRecord, updates) => {
   // Update memory
-  const memoryIndex = global._memoryOtps.findIndex(o => o._id === otpRecord._id || (o.email === otpRecord.email && o.purpose === otpRecord.purpose));
+  const memoryIndex = global._memoryOtps.findIndex(
+    o => o._id === otpRecord._id || (o.email === otpRecord.email && o.purpose === otpRecord.purpose)
+  );
   if (memoryIndex !== -1) {
     global._memoryOtps[memoryIndex] = {
       ...global._memoryOtps[memoryIndex],
       ...updates
     };
+    saveJsonFile(OTPS_FILE, global._memoryOtps);
   }
 
   // Update DB if instance is Mongoose document
@@ -189,7 +266,7 @@ const updateOtpRecord = async (otpRecord, updates) => {
       Object.assign(otpRecord, updates);
       await otpRecord.save();
     } catch (err) {
-      console.warn('⚠️ Could not save OTP updates to DB:', err.message);
+      console.warn('⚠️ Could not update OTP in DB:', err.message);
     }
   }
 };
@@ -198,8 +275,10 @@ const deleteRegistrationOtps = async (cleanEmail) => {
   global._memoryOtps = global._memoryOtps.filter(
     o => !(o.email === cleanEmail && o.purpose === 'ACCOUNT_REGISTRATION')
   );
+  saveJsonFile(OTPS_FILE, global._memoryOtps);
 
-  if (isDbReady()) {
+  const ready = await ensureDbConnected();
+  if (ready) {
     try {
       await OtpVerification.deleteMany({
         email: cleanEmail,
@@ -213,6 +292,7 @@ const deleteRegistrationOtps = async (cleanEmail) => {
 
 module.exports = {
   isDbReady,
+  ensureDbConnected,
   findUserByEmail,
   findUserByNid,
   createCitizenUser,
