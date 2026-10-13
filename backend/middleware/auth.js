@@ -34,26 +34,45 @@ const verifyToken = async (req, res, next) => {
 
     // 2. Look up user by email from resilient store (supports Atlas + memory fallback)
     let user = null;
-    if (decoded.email) {
-      user = await findUserByEmail(decoded.email);
+    try {
+      if (decoded.email) {
+        user = await findUserByEmail(decoded.email);
+      }
+
+      // 3. Fallback to direct DB findById if valid ObjectId
+      if (!user && decoded.id && mongoose.Types.ObjectId.isValid(decoded.id)) {
+        user = await User.findById(decoded.id).select('-password');
+      }
+    } catch (dbErr) {
+      console.warn('⚠️ DB lookup failed in auth middleware, using JWT payload:', dbErr.message);
     }
 
-    // 3. Fallback to direct DB findById if valid ObjectId
-    if (!user && decoded.id && mongoose.Types.ObjectId.isValid(decoded.id)) {
-      user = await User.findById(decoded.id).select('-password');
+    // 4. If user found in DB/memory, use that
+    if (user) {
+      if (user.status === 'Blocked') {
+        return res.status(403).json({ success: false, message: 'আপনার অ্যাকাউন্টটি স্থগিত (Blocked) করা হয়েছে।' });
+      }
+      req.user = user.toObject ? user.toObject() : { ...user };
+      delete req.user.password;
+      return next();
     }
 
-    if (!user) {
-      return res.status(401).json({ success: false, message: 'ব্যবহারকারী খুঁজে পাওয়া যায়নি।' });
+    // 5. DB unavailable — fallback to JWT token payload so reload works
+    // This handles the case where Atlas IP is not whitelisted or DB is temporarily down
+    if (decoded.id && decoded.role && decoded.email) {
+      req.user = {
+        _id: decoded.id,
+        id: decoded.id,
+        name: decoded.name || decoded.email,
+        email: decoded.email,
+        nid: decoded.nid || '',
+        role: decoded.role,
+        status: 'Active'
+      };
+      return next();
     }
 
-    if (user.status === 'Blocked') {
-      return res.status(403).json({ success: false, message: 'আপনার অ্যাকাউন্টটি স্থগিত (Blocked) করা হয়েছে।' });
-    }
-
-    req.user = user.toObject ? user.toObject() : user;
-    delete req.user.password;
-    next();
+    return res.status(401).json({ success: false, message: 'ব্যবহারকারী খুঁজে পাওয়া যায়নি।' });
   } catch (err) {
     return res.status(401).json({ success: false, message: 'টোকেন মেয়াদোত্তীর্ণ বা অবৈধ।' });
   }

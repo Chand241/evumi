@@ -30,11 +30,34 @@ export const AuthProvider = ({ children }) => {
           if (res.data.success) {
             setUser(res.data.user);
           } else {
+            // Server explicitly rejected token (e.g. 401) — logout
             logout();
           }
         } catch (err) {
-          console.error('Failed to restore auth session:', err);
-          logout();
+          // If 401 Unauthorized — token expired/invalid, logout
+          if (err.response?.status === 401) {
+            logout();
+          } else {
+            // Network error, server down, or 5xx — restore from JWT payload
+            // so the user doesn't get kicked out on page reload
+            try {
+              const payload = JSON.parse(atob(token.split('.')[1]));
+              if (payload && payload.id && payload.role) {
+                setUser({
+                  _id: payload.id,
+                  id: payload.id,
+                  role: payload.role,
+                  email: payload.email,
+                  nid: payload.nid,
+                  name: payload.name || payload.email
+                });
+              } else {
+                logout();
+              }
+            } catch {
+              logout();
+            }
+          }
         }
       }
       setLoading(false);

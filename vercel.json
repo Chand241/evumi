@@ -11,32 +11,18 @@
       "root": "frontend",
       "framework": "vite",
       "buildCommand": "npm install --include=dev && npm run build",
-      "outputDirectory": "dist",
-      "routes": [
-        {
-          "src": "/api/(.*)",
-          "continue": true
-        },
-        {
-          "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|map))",
-          "continue": true
-        },
-        {
-          "src": "/(.*)",
-          "dest": "/index.html"
-        }
-      ]
+      "outputDirectory": "dist"
     }
   },
   "rewrites": [
     {
-      "source": "/api/(.*)",
+      "source": "/api/:path*",
       "destination": {
         "service": "backend"
       }
     },
     {
-      "source": "/(.*)",
+      "source": "/:path*",
       "destination": {
         "service": "frontend"
       }
