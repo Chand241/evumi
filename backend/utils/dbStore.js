@@ -57,13 +57,13 @@ const isDbReady = () => mongoose.connection && mongoose.connection.readyState ==
 const ensureDbConnected = async () => {
   if (isDbReady()) return true;
 
-  const mongoUri = process.env.MONGODB_URI;
+  const mongoUri = process.env.MONGODB_URI || 'mongodb+srv://chanddiucse_db_user:aUoVygNtH29GsjPd@evumi.iexl4lo.mongodb.net/evhumi?retryWrites=true&w=majority&appName=Evumi';
   if (!mongoUri || mongoUri.includes('xxxxx')) return false;
 
   try {
     await mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 4000,
-      connectTimeoutMS: 4000
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 5000
     });
     console.log('✅ MongoDB connected successfully');
     return true;

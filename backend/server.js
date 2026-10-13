@@ -78,7 +78,7 @@ app.use((err, req, res, next) => {
 
 // Connect to MongoDB and start server
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGODB_URI;
+const MONGO_URI = process.env.MONGODB_URI || 'mongodb+srv://chanddiucse_db_user:aUoVygNtH29GsjPd@evumi.iexl4lo.mongodb.net/evhumi?retryWrites=true&w=majority&appName=Evumi';
 
 const startServer = (dbStatus) => {
   app.listen(PORT, () => {
