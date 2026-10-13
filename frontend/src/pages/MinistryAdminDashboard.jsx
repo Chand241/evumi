@@ -360,7 +360,7 @@ export default function MinistryAdminDashboard() {
               </span>
             </div>
             <p style={{ color: '#94a3b8', fontSize: '13px', margin: '4px 0 0 0' }}>
-              প্রশাসক: <strong style={{ color: '#cbd5e1' }}>{user?.name}</strong> | লগইন: <span style={{ fontFamily: 'monospace', color: '#f472b6' }}>admin@gmail.com</span> (Password: 123456)
+              প্রশাসক: <strong style={{ color: '#cbd5e1' }}>{user?.name}</strong> | ইমেইল: <span style={{ fontFamily: 'monospace', color: '#f472b6' }}>{user?.email}</span>
             </p>
           </div>
         </div>

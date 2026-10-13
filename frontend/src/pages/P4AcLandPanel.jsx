@@ -227,7 +227,7 @@ export default function P4AcLandPanel() {
                           🔗 {issueResult.payment_link}
                         </div>
                         <button onClick={handleCompletePayment} className="btn-primary" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                          💳 পেমেন্ট সম্পন্ন করুন (Demo) → খতিয়ান তৈরি করুন
+                          💳 পেমেন্ট সম্পন্ন করুন → খতিয়ান তৈরি করুন
                         </button>
                       </>
                     )}

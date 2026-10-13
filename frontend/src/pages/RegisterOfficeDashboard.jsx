@@ -100,16 +100,16 @@ export default function RegisterOfficeDashboard() {
   const [selectedLand, setSelectedLand] = useState(null);
   const [searchingLand, setSearchingLand] = useState(false);
 
-  const [userQuery, setUserQuery] = useState('1998567890123'); // Default demo citizen NID
+  const [userQuery, setUserQuery] = useState('');
   const [foundUser, setFoundUser] = useState(null);
   const [searchingUser, setSearchingUser] = useState(false);
   const [userError, setUserError] = useState(null);
 
   // Volume & Page fields (placed directly above Assign button)
-  const [volumeBook, setVolumeBook] = useState('VOL-2026-X');
-  const [pageNo, setPageNo] = useState('128');
-  const [deedNo, setDeedNo] = useState('DEED-2026-088');
-  const [remarks, setRemarks] = useState('স্বত্ব হস্তান্তর ও চূড়ান্ত বরাদ্দ অনুমোদন প্রস্তাব');
+  const [volumeBook, setVolumeBook] = useState('');
+  const [pageNo, setPageNo] = useState('');
+  const [deedNo, setDeedNo] = useState('');
+  const [remarks, setRemarks] = useState('');
 
   // Submitting
   const [assigning, setAssigning] = useState(false);

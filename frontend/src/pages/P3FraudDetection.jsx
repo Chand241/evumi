@@ -133,12 +133,12 @@ export default function P3FraudDetection() {
           </h2>
           <form onSubmit={handleVerify} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {[
-              { name: 'seller_nid', label: 'বিক্রেতার NID', placeholder: '১৯৯৮৫৬৭৮৯০১২৩', hint: 'Demo: 1998567890123' },
-              { name: 'mouza', label: 'মৌজার নাম (শিবগঞ্জ)', placeholder: 'গুজিয়া', hint: 'Demo: গুজিয়া' },
-              { name: 'jl_no', label: 'জে.এল নম্বর', placeholder: '১', hint: 'Demo: 1' },
-              { name: 'khatian_no', label: 'খতিয়ান নম্বর', placeholder: '২৫', hint: 'Demo: 25' },
-              { name: 'dag_no', label: 'দাগ নম্বর', placeholder: '১০১', hint: 'Demo: 101' },
-              { name: 'requested_area', label: 'বিক্রয়যোগ্য পরিমাণ (শতাংশ)', placeholder: '৫', hint: 'Demo: 5 (মোট ১৮ শতাংশ)' },
+              { name: 'seller_nid', label: 'বিক্রেতার NID', placeholder: 'বিক্রেতার ১৭ বা ১০ ডিজিটের NID লিখুন' },
+              { name: 'mouza', label: 'মৌজার নাম', placeholder: 'মৌজার নাম লিখুন' },
+              { name: 'jl_no', label: 'জে.এল নম্বর', placeholder: 'জে.এল নম্বর' },
+              { name: 'khatian_no', label: 'খতিয়ান নম্বর', placeholder: 'খতিয়ান নম্বর' },
+              { name: 'dag_no', label: 'দাগ নম্বর', placeholder: 'দাগ নম্বর' },
+              { name: 'requested_area', label: 'বিক্রয়যোগ্য পরিমাণ (শতাংশ)', placeholder: 'শতাংশের পরিমাণ লিখুন' },
             ].map((field) => (
               <div key={field.name}>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#94a3b8', marginBottom: '6px' }}>
@@ -153,42 +153,12 @@ export default function P3FraudDetection() {
                   placeholder={field.placeholder}
                   required={['seller_nid', 'dag_no', 'mouza', 'requested_area'].includes(field.name)}
                 />
-                {field.hint && <div style={{ fontSize: '11px', color: '#64748b', marginTop: '3px' }}>💡 {field.hint}</div>}
               </div>
             ))}
             <button type="submit" className="btn-danger" disabled={loading} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '8px' }}>
               {loading ? <><div className="loader" /> যাচাই হচ্ছে...</> : <><Shield size={16} /> মালিকানা যাচাই করুন</>}
             </button>
           </form>
-
-          {/* Quick test scenarios */}
-          <div style={{ marginTop: '20px', padding: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              ⚡ শিবগঞ্জ, বগুড়া টেস্ট সিনারিও
-            </div>
-            {[
-              { label: '✅ বৈধ মালিক (পাস): গুজিয়া দাগ ১০১', nid: '1998567890123', dag: '101', mouza: 'গুজিয়া', jl: '1', khat: '25', area: '5' },
-              { label: '🚨 জাল মালিক (ফ্রড): ভুল NID', nid: 'WRONG12345', dag: '101', mouza: 'গুজিয়া', jl: '1', khat: '25', area: '5' },
-              { label: '🔴 ডাবল-সেল (Pending): কিচক দাগ ৪১২', nid: '1992456789012', dag: '412', mouza: 'কিচক', jl: '4', khat: '80', area: '5' },
-              { label: '⚠️ জমি কম (Volume Err): অতিরিক্ত চাহিদা', nid: '1998567890123', dag: '101', mouza: 'গুজিয়া', jl: '1', khat: '25', area: '50' },
-            ].map((scenario, i) => (
-              <button
-                key={i}
-                onClick={() => setForm({ seller_nid: scenario.nid, dag_no: scenario.dag, mouza: scenario.mouza, jl_no: scenario.jl, khatian_no: scenario.khat, requested_area: scenario.area })}
-                style={{
-                  display: 'block', width: '100%', textAlign: 'left',
-                  padding: '8px 12px', marginBottom: '4px',
-                  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)',
-                  borderRadius: '8px', color: '#cbd5e1', fontSize: '12px', cursor: 'pointer',
-                  transition: 'background 0.2s',
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
-              >
-                {scenario.label}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Results Panel */}

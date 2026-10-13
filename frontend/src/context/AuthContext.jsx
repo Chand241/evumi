@@ -76,15 +76,6 @@ export const AuthProvider = ({ children }) => {
     throw new Error(res.data.message || 'লগইন ব্যর্থ হয়েছে');
   };
 
-  const demoLogin = async (role) => {
-    const res = await axios.post('/api/auth/demo-login', { role });
-    if (res.data.success) {
-      setToken(res.data.token);
-      setUser(res.data.user);
-      return res.data;
-    }
-    throw new Error(res.data.message || 'ডেমো লগইন ব্যর্থ হয়েছে');
-  };
 
   const register = async (userData) => {
     const res = await axios.post('/api/auth/register', userData);
@@ -136,7 +127,6 @@ export const AuthProvider = ({ children }) => {
         token,
         loading,
         login,
-        demoLogin,
         register,
         verifyAndRegister,
         logout,

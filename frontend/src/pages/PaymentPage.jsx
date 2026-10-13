@@ -36,7 +36,7 @@ export default function PaymentPage() {
               <div style={{ fontSize: '12px', color: '#64748b' }}>নামজারি সরকারি ফি</div>
             </div>
             <button onClick={handlePay} disabled={paying} className="btn-primary" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '16px', fontSize: '16px' }}>
-              {paying ? <><div className="loader" /> প্রক্রিয়াকরণ...</> : <><CreditCard size={18} /> পেমেন্ট সম্পন্ন করুন (Demo)</>}
+              {paying ? <><div className="loader" /> প্রক্রিয়াকরণ...</> : <><CreditCard size={18} /> পেমেন্ট সম্পন্ন করুন</>}
             </button>
           </>
         ) : (
