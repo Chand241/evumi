@@ -91,7 +91,8 @@ export default function P4RegistryPanel() {
   };
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 24px 80px' }}>
+    <div className="dashboard-dark" style={{ paddingTop: '1px', paddingBottom: '40px' }}>
+    <div style={{ maxWidth: '1200px', margin: '30px auto', padding: '0 24px' }}>
       {/* Header */}
       <div style={{ marginBottom: '32px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '8px' }}>
@@ -313,6 +314,7 @@ export default function P4RegistryPanel() {
           )}
         </div>
       </div>
+    </div>
     </div>
   );
 }

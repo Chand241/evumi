@@ -317,6 +317,7 @@ export default function MinistryAdminDashboard() {
   };
 
   return (
+    <div className="dashboard-dark" style={{ paddingTop: '1px', paddingBottom: '40px' }}>
     <div style={{ maxWidth: '1400px', margin: '30px auto', padding: '0 24px' }}>
       {/* Top Banner */}
       <div className="glass-card" style={{
@@ -1054,6 +1055,7 @@ export default function MinistryAdminDashboard() {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 }

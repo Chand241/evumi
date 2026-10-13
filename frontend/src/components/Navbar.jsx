@@ -47,10 +47,10 @@ export default function Navbar() {
         height: '64px',
       }}>
         {/* Logo */}
-        <NavLink to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <NavLink to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{
-            width: '38px',
-            height: '38px',
+            width: '36px',
+            height: '36px',
             background: 'linear-gradient(135deg, #1a6b3c, #16a34a)',
             borderRadius: '10px',
             display: 'flex',
@@ -58,10 +58,11 @@ export default function Navbar() {
             justifyContent: 'center',
             fontSize: '18px',
             boxShadow: '0 2px 8px rgba(26,107,60,0.3)',
+            flexShrink: 0,
           }}>🏛️</div>
           <div>
-            <div style={{ fontSize: '17px', fontWeight: '800', color: '#0f172a' }}>e-ভূমি</div>
-            <div style={{ fontSize: '10px', color: '#64748b', lineHeight: 1, fontWeight: '500' }}>ডিজিটাল ভূমি ব্যবস্থাপনা</div>
+            <div style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', lineHeight: 1.2 }}>e-ভূমি</div>
+            <div className="hide-on-mobile" style={{ fontSize: '10px', color: '#64748b', lineHeight: 1, fontWeight: '500' }}>ডিজিটাল ভূমি প্রশাসন</div>
           </div>
         </NavLink>
 
@@ -70,64 +71,65 @@ export default function Navbar() {
           <NavLink
             to="/"
             className={location.pathname === '/' ? 'nav-link active' : 'nav-link'}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
           >
-            <Home size={14} /> হোম
+            <Home size={14} /> <span className="hide-on-mobile">হোম</span>
           </NavLink>
 
           <NavLink
             to="/verify"
             className={location.pathname === '/verify' ? 'nav-link active' : 'nav-link'}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
           >
-            <Search size={14} /> জমি যাচাই
+            <Search size={14} /> <span>যাচাই</span>
           </NavLink>
         </div>
 
         {/* Auth Section */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           {user ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               {/* Dashboard Link */}
               <NavLink
                 to={getDashboardRoute(user.role)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
+                  gap: '5px',
                   background: '#ecfdf5',
                   border: '1px solid #a7f3d0',
                   color: '#15803d',
-                  padding: '6px 14px',
+                  padding: '6px 10px',
                   borderRadius: '8px',
                   textDecoration: 'none',
                   fontSize: '12px',
                   fontWeight: '700',
                   transition: 'all 0.2s ease',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                <LayoutDashboard size={14} /> আমার ড্যাশবোর্ড
+                <LayoutDashboard size={14} /> <span>ড্যাশবোর্ড</span>
               </NavLink>
 
               {/* User Role Badge */}
-              <div style={{
+              <div className="hide-on-mobile" style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
                 background: '#f8fafc',
-                padding: '5px 12px',
+                padding: '4px 10px',
                 borderRadius: '8px',
                 border: '1px solid #e2e8f0',
               }}>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '12px', fontWeight: '700', color: '#0f172a' }}>{user.name}</div>
+                  <div style={{ fontSize: '11px', fontWeight: '700', color: '#0f172a' }}>{user.name}</div>
                   <span style={{
                     fontSize: '9px',
                     fontWeight: '800',
                     color: roleBadge.color,
                     background: roleBadge.bg,
                     border: `1px solid ${roleBadge.border}`,
-                    padding: '1px 6px',
+                    padding: '1px 5px',
                     borderRadius: '4px',
                     display: 'inline-block',
                     marginTop: '1px',
@@ -145,7 +147,7 @@ export default function Navbar() {
                   background: '#fee2e2',
                   border: '1px solid #fca5a5',
                   color: '#dc2626',
-                  padding: '7px 10px',
+                  padding: '7px 9px',
                   borderRadius: '8px',
                   cursor: 'pointer',
                   fontSize: '12px',
@@ -160,24 +162,25 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <NavLink
                 to="/login"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
-                  padding: '7px 16px',
+                  gap: '5px',
+                  padding: '6px 12px',
                   borderRadius: '8px',
                   background: 'linear-gradient(135deg, #1a6b3c, #16a34a)',
                   color: 'white',
                   textDecoration: 'none',
-                  fontSize: '13px',
+                  fontSize: '12px',
                   fontWeight: '700',
-                  boxShadow: '0 2px 6px rgba(26,107,60,0.3)',
+                  boxShadow: '0 2px 6px rgba(26,107,60,0.25)',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                <LogIn size={14} /> লগইন
+                <LogIn size={13} /> লগইন
               </NavLink>
 
               <NavLink
@@ -185,19 +188,20 @@ export default function Navbar() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
-                  padding: '7px 14px',
+                  gap: '5px',
+                  padding: '6px 10px',
                   borderRadius: '8px',
                   background: '#ffffff',
                   border: '1.5px solid #e2e8f0',
                   color: '#334155',
                   textDecoration: 'none',
-                  fontSize: '13px',
+                  fontSize: '12px',
                   fontWeight: '600',
                   boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                <UserPlus size={14} /> নিবন্ধন
+                <UserPlus size={13} /> <span className="hide-on-mobile">নিবন্ধন</span>
               </NavLink>
             </div>
           )}

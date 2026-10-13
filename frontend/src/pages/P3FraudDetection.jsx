@@ -80,7 +80,8 @@ export default function P3FraudDetection() {
   const alertStyle = result ? (alertColors[result.alert_type] || alertColors['NOT_FOUND']) : null;
 
   return (
-    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 24px 80px' }}>
+    <div className="dashboard-dark" style={{ paddingTop: '1px', paddingBottom: '40px' }}>
+    <div style={{ maxWidth: '1100px', margin: '30px auto', padding: '0 24px' }}>
       {/* Header */}
       <div style={{ marginBottom: '36px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '12px' }}>
@@ -100,7 +101,7 @@ export default function P3FraudDetection() {
         </div>
 
         {/* Steps */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '20px', flexWrap: 'wrap' }}>
           {stepLabels.map((step, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{
@@ -307,6 +308,7 @@ export default function P3FraudDetection() {
           )}
         </div>
       </div>
+    </div>
     </div>
   );
 }

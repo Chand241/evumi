@@ -209,7 +209,8 @@ export default function P5CitizenVerify() {
   };
 
   return (
-    <div style={{ maxWidth: '1080px', margin: '0 auto', padding: '40px 24px 80px' }}>
+    <div className="dashboard-dark" style={{ paddingTop: '1px', paddingBottom: '40px' }}>
+    <div style={{ maxWidth: '1080px', margin: '30px auto', padding: '0 24px' }}>
       {/* Hero header */}
       <div style={{ textAlign: 'center', marginBottom: '40px' }}>
         <div style={{
@@ -660,6 +661,7 @@ export default function P5CitizenVerify() {
           <strong style={{ color: '#94a3b8' }}>গোপনীয়তা নিশ্চিত:</strong> এই পোর্টালে মালিকের NID এবং ব্যক্তিগত তথ্য আংশিকভাবে মাস্ক করা থাকে (যেমন: 1998567****) তথ্য সুরক্ষা আইন অনুযায়ী। এটি একটি Read-Only উন্মুক্ত নাগরিক সেবা।
         </div>
       </div>
+    </div>
     </div>
   );
 }

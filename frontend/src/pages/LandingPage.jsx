@@ -315,7 +315,7 @@ export default function LandingPage() {
             ].map((t, i) => (
               <div key={i} style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
-                color: '#64748b', fontSize: '13px', fontWeight: '500',
+                color: '#cbd5e1', fontSize: '13px', fontWeight: '500',
               }}>
                 <span style={{ color: '#4ade80' }}>{t.icon}</span> {t.text}
               </div>
@@ -503,7 +503,7 @@ export default function LandingPage() {
             <h2 style={{ fontSize: 'clamp(22px, 3.5vw, 36px)', fontWeight: '900', color: '#f1f5f9', marginBottom: '12px' }}>
               🔄 ডিজিটাল Workflow Pipeline
             </h2>
-            <p style={{ color: '#64748b', fontSize: '15px', maxWidth: '520px', margin: '0 auto' }}>
+            <p style={{ color: '#cbd5e1', fontSize: '15px', maxWidth: '520px', margin: '0 auto' }}>
               সাব-রেজিস্ট্রি থেকে নাগরিকের নামে খতিয়ান পর্যন্ত ৭-ধাপের স্বয়ংক্রিয় প্রক্রিয়া
             </p>
           </div>
@@ -539,14 +539,14 @@ export default function LandingPage() {
                   <div style={{ fontSize: '12px', fontWeight: '800', color: '#f1f5f9', marginBottom: '3px' }}>
                     {step.label}
                   </div>
-                  <div style={{ fontSize: '10px', color: '#64748b' }}>{step.sub}</div>
+                  <div style={{ fontSize: '10px', color: '#cbd5e1' }}>{step.sub}</div>
                   <div style={{
                     marginTop: '8px', width: '6px', height: '6px', borderRadius: '50%',
                     background: step.bg, margin: '8px auto 0',
                   }} />
                 </div>
                 {i < FLOW.length - 1 && (
-                  <div style={{ color: '#334155', fontSize: '20px', fontWeight: '700' }}>›</div>
+                  <div style={{ color: '#64748b', fontSize: '20px', fontWeight: '700' }}>›</div>
                 )}
               </div>
             ))}
@@ -694,7 +694,7 @@ export default function LandingPage() {
           </div>
 
           {/* Bottom note */}
-          <p style={{ color: '#475569', fontSize: '12px', marginTop: '32px' }}>
+          <p style={{ color: '#94a3b8', fontSize: '12px', marginTop: '32px' }}>
             🔒 সকল তথ্য SSL এনক্রিপ্টেড · বাংলাদেশ সরকার কর্তৃক অনুমোদিত
           </p>
         </div>
@@ -705,7 +705,7 @@ export default function LandingPage() {
       ══════════════════════════════════════════ */}
       <footer style={{
         background: '#0f172a',
-        borderTop: '1px solid rgba(255,255,255,0.06)',
+        borderTop: '1px solid rgba(255,255,255,0.08)',
         padding: '32px 24px',
         textAlign: 'center',
       }}>
@@ -719,11 +719,11 @@ export default function LandingPage() {
             background: 'linear-gradient(135deg, #86efac, #4ade80)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
           }}>e-ভূমি</span>
-          <span style={{ color: '#475569', fontSize: '13px' }}>
+          <span style={{ color: '#94a3b8', fontSize: '13px' }}>
             · বাংলাদেশ ভূমি মন্ত্রণালয়
           </span>
         </div>
-        <p style={{ color: '#334155', fontSize: '12px' }}>
+        <p style={{ color: '#94a3b8', fontSize: '12px' }}>
           © ২০২৬ e-ভূমি ডিজিটাল ভূমি ব্যবস্থাপনা সিস্টেম। সর্বস্বত্ব সংরক্ষিত।
         </p>
       </footer>
