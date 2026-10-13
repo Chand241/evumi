@@ -32,6 +32,7 @@ export default function LoginPage() {
     try {
       const res = await login(email.trim().toLowerCase(), password);
       const targetRoute = getDashboardRoute(res.user.role);
+      navigate(targetRoute, { replace: true });
     } catch (err) {
       const msg = err.response?.data?.message
         || (err.response?.status === 500 ? 'সার্ভারে সাময়িক সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।' : null)
