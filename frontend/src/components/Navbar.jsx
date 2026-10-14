@@ -47,22 +47,34 @@ export default function Navbar() {
         height: '64px',
       }}>
         {/* Logo */}
-        <NavLink to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <NavLink to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
-            width: '36px',
-            height: '36px',
-            background: 'linear-gradient(135deg, #1a6b3c, #16a34a)',
+            width: '42px',
+            height: '42px',
             borderRadius: '10px',
+            background: '#ffffff',
+            border: '1.5px solid #dcfce7',
+            boxShadow: '0 2px 8px rgba(26,107,60,0.15)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '18px',
-            boxShadow: '0 2px 8px rgba(26,107,60,0.3)',
+            overflow: 'hidden',
             flexShrink: 0,
-          }}>🏛️</div>
+            padding: '2px',
+          }}>
+            <img
+              src="/evumi-logo.png"
+              alt="e-ভূমি লোগো"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+              }}
+            />
+          </div>
           <div>
-            <div style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', lineHeight: 1.2 }}>e-ভূমি</div>
-            <div className="hide-on-mobile" style={{ fontSize: '10px', color: '#64748b', lineHeight: 1, fontWeight: '500' }}>ডিজিটাল ভূমি প্রশাসন</div>
+            <div style={{ fontSize: '17px', fontWeight: '900', color: '#1a6b3c', lineHeight: 1.2 }}>e-ভূমি</div>
+            <div className="hide-on-mobile" style={{ fontSize: '10px', color: '#64748b', lineHeight: 1, fontWeight: '600' }}>ডিজিটাল ভূমি প্রশাসন</div>
           </div>
         </NavLink>
 

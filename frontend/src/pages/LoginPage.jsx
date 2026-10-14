@@ -60,17 +60,28 @@ export default function LoginPage() {
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
           {/* Logo */}
           <div style={{
-            width: '60px',
-            height: '60px',
-            background: 'linear-gradient(135deg, #1a6b3c, #16a34a)',
-            borderRadius: '16px',
+            width: '68px',
+            height: '68px',
+            background: '#ffffff',
+            borderRadius: '18px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '28px',
             margin: '0 auto 16px',
-            boxShadow: '0 4px 14px rgba(26,107,60,0.35)',
-          }}>🏛️</div>
+            padding: '6px',
+            border: '2px solid #dcfce7',
+            boxShadow: '0 8px 24px rgba(26,107,60,0.18)',
+          }}>
+            <img
+              src="/evumi-logo.png"
+              alt="e-ভূমি লোগো"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+              }}
+            />
+          </div>
 
           <div style={{
             display: 'inline-flex',

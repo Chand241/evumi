@@ -171,163 +171,318 @@ export default function LandingPage() {
         alignItems: 'center',
         justifyContent: 'center',
         overflow: 'hidden',
-        background: 'linear-gradient(160deg, #0f172a 0%, #1a3a2a 45%, #0c2340 100%)',
-        padding: '60px 24px',
+        backgroundImage: `
+          linear-gradient(135deg, rgba(255, 255, 255, 0.90) 0%, rgba(240, 253, 244, 0.78) 50%, rgba(255, 255, 255, 0.88) 100%),
+          url('/bg.png')
+        `,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center center',
+        backgroundRepeat: 'no-repeat',
+        padding: '60px 24px 100px',
       }}>
         {/* Animated grid overlay */}
         <div style={{
           position: 'absolute', inset: 0, zIndex: 0,
           backgroundImage: `
-            linear-gradient(rgba(26,107,60,0.08) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(26,107,60,0.08) 1px, transparent 1px)
+            linear-gradient(rgba(26,107,60,0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(26,107,60,0.04) 1px, transparent 1px)
           `,
-          backgroundSize: '50px 50px',
-          transform: `translateY(${scrollY * 0.15}px)`,
+          backgroundSize: '40px 40px',
+          transform: `translateY(${scrollY * 0.12}px)`,
+          pointerEvents: 'none',
         }} />
 
-        {/* Glow orbs */}
+        {/* Luminous Glow Orbs */}
         <div style={{
-          position: 'absolute', top: '10%', left: '5%', width: '400px', height: '400px',
-          borderRadius: '50%', background: 'radial-gradient(circle, rgba(26,107,60,0.2) 0%, transparent 70%)',
-          zIndex: 0, animation: 'float 8s ease-in-out infinite',
+          position: 'absolute', top: '10%', left: '5%', width: '420px', height: '420px',
+          borderRadius: '50%', background: 'radial-gradient(circle, rgba(34,197,94,0.18) 0%, transparent 70%)',
+          zIndex: 0, animation: 'float 9s ease-in-out infinite', pointerEvents: 'none',
         }} />
         <div style={{
-          position: 'absolute', bottom: '5%', right: '5%', width: '350px', height: '350px',
-          borderRadius: '50%', background: 'radial-gradient(circle, rgba(29,78,216,0.18) 0%, transparent 70%)',
-          zIndex: 0, animation: 'float 10s ease-in-out infinite reverse',
-        }} />
-        <div style={{
-          position: 'absolute', top: '50%', left: '50%', width: '600px', height: '600px',
-          borderRadius: '50%', background: 'radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 70%)',
-          zIndex: 0, transform: 'translate(-50%,-50%)',
+          position: 'absolute', bottom: '10%', right: '5%', width: '380px', height: '380px',
+          borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.14) 0%, transparent 70%)',
+          zIndex: 0, animation: 'float 11s ease-in-out infinite reverse', pointerEvents: 'none',
         }} />
 
-        {/* Content */}
-        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: '860px', width: '100%' }}
-          className="animate-fade-in-up">
+        {/* Content Container */}
+        <div style={{
+          position: 'relative', zIndex: 1, maxWidth: '1240px', width: '100%',
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gap: '48px', alignItems: 'center',
+        }}
+          className="animate-fade-in-up"
+        >
+          {/* Left Column: Headlines & Actions */}
+          <div>
+            {/* Government Authority Badge */}
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: '8px',
+              padding: '8px 18px', borderRadius: '999px', marginBottom: '22px',
+              background: '#ffffff',
+              border: '1.5px solid #bbf7d0',
+              color: '#15803d', fontSize: '13px', fontWeight: '700',
+              boxShadow: '0 4px 16px rgba(22,163,74,0.12)',
+              backdropFilter: 'blur(10px)',
+            }}>
+              <Zap size={14} fill="#16a34a" color="#16a34a" />
+              <span>গণপ্রজাতন্ত্রী বাংলাদেশ সরকার · ডিজিটাল ভূমি প্রশাসন</span>
+              <span style={{
+                display: 'inline-block', width: '7px', height: '7px',
+                borderRadius: '50%', background: '#22c55e',
+                animation: 'pulse-green 2s infinite',
+              }} />
+            </div>
 
-          {/* Badge */}
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: '8px',
-            padding: '7px 18px', borderRadius: '999px', marginBottom: '28px',
-            background: 'rgba(26,107,60,0.2)',
-            border: '1px solid rgba(26,107,60,0.5)',
-            color: '#86efac', fontSize: '12px', fontWeight: '700', letterSpacing: '0.04em',
-            backdropFilter: 'blur(10px)',
-          }}>
-            <Zap size={13} fill="#86efac" />
-            বাংলাদেশ ভূমি মন্ত্রণালয় · ডিজিটাল ভূমি প্রশাসন ২০২৬
-            <span style={{
-              display: 'inline-block', width: '6px', height: '6px',
-              borderRadius: '50%', background: '#4ade80',
-              animation: 'pulse-green 2s infinite',
-            }} />
+            {/* Headline */}
+            <h1 style={{
+              fontSize: 'clamp(34px, 5.5vw, 68px)',
+              fontWeight: '900', lineHeight: 1.12,
+              marginBottom: '20px', letterSpacing: '-0.02em',
+              color: '#0f172a',
+            }}>
+              <span style={{
+                background: 'linear-gradient(135deg, #15803d 0%, #16a34a 60%, #22c55e 100%)',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}>e-ভূমি</span>
+              <br />
+              <span>সমন্বিত ডিজিটাল</span>
+              <br />
+              <span style={{
+                background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #3b82f6 100%)',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}>ভূমি ব্যবস্থাপনা</span>
+            </h1>
+
+            <p style={{
+              fontSize: 'clamp(15px, 1.8vw, 17px)', color: '#334155',
+              maxWidth: '560px', margin: '0 0 34px', lineHeight: 1.8,
+              fontWeight: '500',
+            }}>
+              নাগরিক, সাব-রেজিস্ট্রার, এসি ল্যান্ড ও মন্ত্রণালয়ের জন্য একক নিরাপদ প্ল্যাটফর্ম।
+              দলিল জালিয়াতি ও ডাবল-সেলিং প্রতিরোধে SHA-256 ক্রিপ্টোগ্রাফিক সুরক্ষা এবং কিউআর কোড ই-খতিয়ান যাচাই।
+            </p>
+
+            {/* CTA Buttons */}
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '36px' }}>
+              <button onClick={() => navigate('/login')} style={{
+                display: 'inline-flex', alignItems: 'center', gap: '8px',
+                padding: '14px 28px', borderRadius: '12px', border: 'none',
+                background: 'linear-gradient(135deg, #1a6b3c, #16a34a)',
+                color: '#fff', fontSize: '15px', fontWeight: '700',
+                cursor: 'pointer', boxShadow: '0 6px 20px rgba(22,163,74,0.35)',
+                transition: 'all 0.25s ease',
+                fontFamily: "'Inter','Hind Siliguri',sans-serif",
+              }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 10px 28px rgba(22,163,74,0.45)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(22,163,74,0.35)'; }}
+              >
+                <LogIn size={17} /> লগইন পোর্টাল <ArrowRight size={15} />
+              </button>
+
+              <button onClick={() => navigate('/register')} style={{
+                display: 'inline-flex', alignItems: 'center', gap: '8px',
+                padding: '14px 24px', borderRadius: '12px',
+                border: '1.5px solid #16a34a',
+                background: '#ffffff',
+                color: '#15803d', fontSize: '15px', fontWeight: '700',
+                cursor: 'pointer', boxShadow: '0 4px 14px rgba(0,0,0,0.05)',
+                transition: 'all 0.25s ease',
+                fontFamily: "'Inter','Hind Siliguri',sans-serif",
+              }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#f0fdf4'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.transform = 'translateY(0)'; }}
+              >
+                <UserPlus size={17} /> নাগরিক নিবন্ধন
+              </button>
+
+              <button onClick={() => navigate('/verify')} style={{
+                display: 'inline-flex', alignItems: 'center', gap: '8px',
+                padding: '14px 24px', borderRadius: '12px',
+                border: '1.5px solid #93c5fd',
+                background: '#eff6ff',
+                color: '#1d4ed8', fontSize: '15px', fontWeight: '700',
+                cursor: 'pointer', boxShadow: '0 4px 14px rgba(29,78,216,0.08)',
+                transition: 'all 0.25s ease',
+                fontFamily: "'Inter','Hind Siliguri',sans-serif",
+              }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#dbeafe'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = '#eff6ff'; e.currentTarget.style.transform = 'translateY(0)'; }}
+              >
+                <Search size={17} /> জমি যাচাই (P5)
+              </button>
+            </div>
+
+            {/* Trust Badges */}
+            <div style={{
+              display: 'flex', gap: '22px', flexWrap: 'wrap',
+            }}>
+              {[
+                { icon: <Shield size={15} />, text: 'SSL এনক্রিপ্টেড' },
+                { icon: <Award size={15} />, text: 'সরকার অনুমোদিত' },
+                { icon: <CheckCircle size={15} />, text: 'NID বায়োমেট্রিক সক্রিয়' },
+              ].map((t, i) => (
+                <div key={i} style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  color: '#475569', fontSize: '13px', fontWeight: '600',
+                  background: 'rgba(255,255,255,0.7)',
+                  padding: '6px 12px', borderRadius: '8px',
+                  border: '1px solid #e2e8f0',
+                }}>
+                  <span style={{ color: '#16a34a' }}>{t.icon}</span> {t.text}
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Headline */}
-          <h1 style={{
-            fontSize: 'clamp(38px, 7vw, 80px)',
-            fontWeight: '900', lineHeight: 1.1,
-            marginBottom: '24px', letterSpacing: '-0.02em',
-          }}>
-            <span style={{
-              background: 'linear-gradient(135deg, #86efac 0%, #4ade80 50%, #22c55e 100%)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}>e-ভূমি</span>
-            <br />
-            <span style={{ color: '#f1f5f9' }}>সমন্বিত ডিজিটাল</span>
-            <br />
-            <span style={{
-              background: 'linear-gradient(135deg, #93c5fd 0%, #60a5fa 50%, #3b82f6 100%)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}>ভূমি ব্যবস্থাপনা</span>
-          </h1>
-
-          <p style={{
-            fontSize: 'clamp(15px, 2vw, 18px)', color: '#94a3b8',
-            maxWidth: '620px', margin: '0 auto 40px', lineHeight: 1.8,
-          }}>
-            নাগরিক, সাব-রেজিস্ট্রার, এসি ল্যান্ড ও মন্ত্রণালয়ের জন্য একক সুরক্ষিত প্ল্যাটফর্ম।
-            জাল দলিল ও ডাবল-সেলিং প্রতিরোধে SHA-256 প্রযুক্তি।
-          </p>
-
-          {/* CTA Buttons */}
-          <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button onClick={() => navigate('/login')} style={{
-              display: 'inline-flex', alignItems: 'center', gap: '9px',
-              padding: '15px 32px', borderRadius: '12px', border: 'none',
-              background: 'linear-gradient(135deg, #1a6b3c, #16a34a)',
-              color: '#fff', fontSize: '16px', fontWeight: '700',
-              cursor: 'pointer', boxShadow: '0 4px 24px rgba(22,163,74,0.45)',
-              transition: 'all 0.25s ease',
-              fontFamily: "'Inter','Hind Siliguri',sans-serif",
+          {/* Right Column: Featured evumi-logo.png Showcase Card */}
+          <div style={{ display: 'flex', justifyContent: 'center', position: 'relative' }}>
+            <div style={{
+              position: 'relative',
+              width: '100%',
+              maxWidth: '440px',
+              background: 'rgba(255, 255, 255, 0.85)',
+              border: '2px solid rgba(22, 163, 74, 0.25)',
+              borderRadius: '28px',
+              padding: '36px 28px',
+              boxShadow: '0 20px 50px rgba(22, 163, 74, 0.14), 0 4px 16px rgba(0,0,0,0.04)',
+              backdropFilter: 'blur(16px)',
+              textAlign: 'center',
+              transition: 'all 0.3s ease',
             }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(22,163,74,0.55)'; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 24px rgba(22,163,74,0.45)'; }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 25px 60px rgba(22, 163, 74, 0.22)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 20px 50px rgba(22, 163, 74, 0.14), 0 4px 16px rgba(0,0,0,0.04)'; }}
             >
-              <LogIn size={18} /> লগইন পোর্টাল <ArrowRight size={16} />
-            </button>
-
-            <button onClick={() => navigate('/register')} style={{
-              display: 'inline-flex', alignItems: 'center', gap: '9px',
-              padding: '15px 28px', borderRadius: '12px',
-              border: '1.5px solid rgba(255,255,255,0.2)',
-              background: 'rgba(255,255,255,0.07)',
-              color: '#f1f5f9', fontSize: '16px', fontWeight: '600',
-              cursor: 'pointer', backdropFilter: 'blur(10px)',
-              transition: 'all 0.25s ease',
-              fontFamily: "'Inter','Hind Siliguri',sans-serif",
-            }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.14)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.transform = 'translateY(0)'; }}
-            >
-              <UserPlus size={18} /> নাগরিক নিবন্ধন
-            </button>
-
-            <button onClick={() => navigate('/verify')} style={{
-              display: 'inline-flex', alignItems: 'center', gap: '9px',
-              padding: '15px 28px', borderRadius: '12px',
-              border: '1.5px solid rgba(147,197,253,0.3)',
-              background: 'rgba(29,78,216,0.15)',
-              color: '#93c5fd', fontSize: '16px', fontWeight: '600',
-              cursor: 'pointer', backdropFilter: 'blur(10px)',
-              transition: 'all 0.25s ease',
-              fontFamily: "'Inter','Hind Siliguri',sans-serif",
-            }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(29,78,216,0.25)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(29,78,216,0.15)'; e.currentTarget.style.transform = 'translateY(0)'; }}
-            >
-              <Search size={18} /> জমি যাচাই (P5)
-            </button>
-          </div>
-
-          {/* Trust indicators */}
-          <div style={{
-            marginTop: '48px', display: 'flex', gap: '28px',
-            justifyContent: 'center', flexWrap: 'wrap',
-          }}>
-            {[
-              { icon: <Shield size={14} />, text: 'SSL সুরক্ষিত' },
-              { icon: <Award size={14} />, text: 'সরকার অনুমোদিত' },
-              { icon: <CheckCircle size={14} />, text: 'NID যাচাই সক্রিয়' },
-            ].map((t, i) => (
-              <div key={i} style={{
-                display: 'flex', alignItems: 'center', gap: '6px',
-                color: '#cbd5e1', fontSize: '13px', fontWeight: '500',
+              {/* Top Card Badge */}
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: '6px',
+                padding: '4px 14px', borderRadius: '999px',
+                background: '#ecfdf5', border: '1px solid #a7f3d0',
+                color: '#15803d', fontSize: '11px', fontWeight: '800',
+                marginBottom: '20px', letterSpacing: '0.04em', textTransform: 'uppercase',
               }}>
-                <span style={{ color: '#4ade80' }}>{t.icon}</span> {t.text}
+                <Star size={12} fill="#15803d" /> জাতীয় স্মার্ট ল্যান্ড প্ল্যাটফর্ম
               </div>
-            ))}
+
+              {/* Official Logo Container */}
+              <div style={{
+                position: 'relative',
+                width: '180px',
+                height: '180px',
+                margin: '0 auto 20px',
+                borderRadius: '24px',
+                background: 'radial-gradient(circle, #ffffff 60%, #f0fdf4 100%)',
+                border: '2px solid #bbf7d0',
+                boxShadow: '0 12px 30px rgba(26,107,60,0.18)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '10px',
+              }}>
+                <img
+                  src="/evumi-logo.png"
+                  alt="e-ভূমি অফিসিয়াল লোগো"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain',
+                    filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.06))',
+                  }}
+                />
+              </div>
+
+              {/* Brand Title */}
+              <h3 style={{
+                fontSize: '22px', fontWeight: '900', color: '#0f172a',
+                marginBottom: '4px',
+              }}>
+                e-ভূমি স্মার্ট গভর্নেন্স
+              </h3>
+              <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '22px', fontWeight: '500' }}>
+                শিবগঞ্জ উপজেলা মডেল বাস্তবায়ন · ডিজিটাল ভূমি রেকর্ড
+              </p>
+
+              {/* 3 High-Tech Security Badges */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px', textAlign: 'left' }}>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: '10px',
+                  background: '#f8fafc', border: '1px solid #e2e8f0',
+                  borderRadius: '12px', padding: '10px 14px',
+                }}>
+                  <div style={{
+                    width: '32px', height: '32px', borderRadius: '8px',
+                    background: '#dcfce7', color: '#16a34a',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '15px', flexShrink: 0,
+                  }}>
+                    🛡️
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '12px', fontWeight: '800', color: '#0f172a' }}>ক্রিপ্টোগ্রাফিক সুরক্ষা</div>
+                    <div style={{ fontSize: '11px', color: '#64748b' }}>SHA-256 হ্যাশ দিয়ে জাল দলিল শূন্যের কোঠায়</div>
+                  </div>
+                </div>
+
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: '10px',
+                  background: '#f8fafc', border: '1px solid #e2e8f0',
+                  borderRadius: '12px', padding: '10px 14px',
+                }}>
+                  <div style={{
+                    width: '32px', height: '32px', borderRadius: '8px',
+                    background: '#dbeafe', color: '#1d4ed8',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '15px', flexShrink: 0,
+                  }}>
+                    ⚖️
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '12px', fontWeight: '800', color: '#0f172a' }}>স্বয়ংক্রিয় নামজারি</div>
+                    <div style={{ fontSize: '11px', color: '#64748b' }}>রেজিস্ট্রি থেকে এসি ল্যান্ডে সরাসরি অনুমোদন</div>
+                  </div>
+                </div>
+
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: '10px',
+                  background: '#f8fafc', border: '1px solid #e2e8f0',
+                  borderRadius: '12px', padding: '10px 14px',
+                }}>
+                  <div style={{
+                    width: '32px', height: '32px', borderRadius: '8px',
+                    background: '#fef3c7', color: '#b45309',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '15px', flexShrink: 0,
+                  }}>
+                    📱
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '12px', fontWeight: '800', color: '#0f172a' }}>QR খতিয়ান ভেরিফিকেশন</div>
+                    <div style={{ fontSize: '11px', color: '#64748b' }}>মুহূর্তেই যেকোনো নাগরিক কর্তৃক দলিল যাচাই</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status pill at bottom */}
+              <div style={{
+                marginTop: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                gap: '6px', fontSize: '11px', color: '#15803d', fontWeight: '700',
+              }}>
+                <span style={{
+                  width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e',
+                  boxShadow: '0 0 8px #22c55e', display: 'inline-block',
+                }} />
+                সার্ভার সক্রিয় ও সুরক্ষিত · রিয়েল-টাইম ক্লাউড সিঙ্ক
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Bottom wave */}
         <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0, height: '80px',
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: '70px',
           background: 'linear-gradient(to bottom, transparent, #f0f4f8)',
-          zIndex: 1,
+          zIndex: 1, pointerEvents: 'none',
         }} />
       </section>
 
@@ -711,9 +866,20 @@ export default function LandingPage() {
       }}>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          gap: '8px', marginBottom: '10px',
+          gap: '10px', marginBottom: '10px',
         }}>
-          <span style={{ fontSize: '20px' }}>🌿</span>
+          <img
+            src="/evumi-logo.png"
+            alt="e-ভূমি"
+            style={{
+              width: '28px',
+              height: '28px',
+              objectFit: 'contain',
+              borderRadius: '6px',
+              background: '#ffffff',
+              padding: '2px',
+            }}
+          />
           <span style={{
             fontSize: '18px', fontWeight: '900',
             background: 'linear-gradient(135deg, #86efac, #4ade80)',
