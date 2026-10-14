@@ -67,76 +67,78 @@ const SignalLight = ({ signal }) => {
 };
 
 export default function P5CitizenVerify() {
-  // Cascading dropdown filters
+  // Cascading dropdown filters - all empty initially
   const [filter, setFilter] = useState({
-    division: 'রাজশাহী',
-    district: 'বগুড়া',
-    upazila: 'শিবগঞ্জ',
-    mouza: 'গুজিয়া',
-    jl_no: '1',
-    dag_no: '101',
-    khatian_no: '25'
+    division: '',
+    district: '',
+    upazila: '',
+    mouza: '',
+    jl_no: '',
+    dag_no: '',
+    khatian_no: ''
   });
 
-  const [districtsList, setDistrictsList] = useState(getDistrictsForDivision('রাজশাহী'));
-  const [upazilasList, setUpazilasList] = useState(getUpazilasForDistrict('বগুড়া'));
-  const [mouzasList, setMouzasList] = useState(getMouzasForUpazila('শিবগঞ্জ'));
+  const [districtsList, setDistrictsList] = useState([]);
+  const [upazilasList, setUpazilasList] = useState([]);
+  const [mouzasList, setMouzasList] = useState([]);
 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
 
-  // Cascading change handlers
   const handleDivisionChange = (div) => {
+    if (!div) {
+      setDistrictsList([]);
+      setUpazilasList([]);
+      setMouzasList([]);
+      setFilter(prev => ({ ...prev, division: '', district: '', upazila: '', mouza: '', jl_no: '' }));
+      return;
+    }
     const districts = getDistrictsForDivision(div);
-    const defDist = districts[0] || '';
-    const upazilas = getUpazilasForDistrict(defDist);
-    const defUpz = upazilas[0] || '';
-    const mouzas = getMouzasForUpazila(defUpz);
-    const defMouza = mouzas[0]?.mouza || '';
-    const jl = mouzas[0]?.jl_no || '1';
-
     setDistrictsList(districts);
-    setUpazilasList(upazilas);
-    setMouzasList(mouzas);
+    setUpazilasList([]);
+    setMouzasList([]);
     setFilter(prev => ({
       ...prev,
       division: div,
-      district: defDist,
-      upazila: defUpz,
-      mouza: defMouza,
-      jl_no: jl
+      district: '',
+      upazila: '',
+      mouza: '',
+      jl_no: ''
     }));
   };
 
   const handleDistrictChange = (dist) => {
+    if (!dist) {
+      setUpazilasList([]);
+      setMouzasList([]);
+      setFilter(prev => ({ ...prev, district: '', upazila: '', mouza: '', jl_no: '' }));
+      return;
+    }
     const upazilas = getUpazilasForDistrict(dist);
-    const defUpz = upazilas[0] || '';
-    const mouzas = getMouzasForUpazila(defUpz);
-    const defMouza = mouzas[0]?.mouza || '';
-    const jl = mouzas[0]?.jl_no || '1';
-
     setUpazilasList(upazilas);
-    setMouzasList(mouzas);
+    setMouzasList([]);
     setFilter(prev => ({
       ...prev,
       district: dist,
-      upazila: defUpz,
-      mouza: defMouza,
-      jl_no: jl
+      upazila: '',
+      mouza: '',
+      jl_no: ''
     }));
   };
 
   const handleUpazilaChange = (upz) => {
+    if (!upz) {
+      setMouzasList([]);
+      setFilter(prev => ({ ...prev, upazila: '', mouza: '', jl_no: '' }));
+      return;
+    }
     const mouzas = getMouzasForUpazila(upz);
-    const defMouza = mouzas[0]?.mouza || '';
-    const jl = mouzas[0]?.jl_no || '1';
-
     setMouzasList(mouzas);
     setFilter(prev => ({
       ...prev,
       upazila: upz,
-      mouza: defMouza,
-      jl_no: jl
+      mouza: '',
+      jl_no: ''
     }));
   };
 
@@ -181,22 +183,15 @@ export default function P5CitizenVerify() {
   };
 
   const handleReset = () => {
-    const defDiv = 'রাজশাহী';
-    const defDist = 'বগুড়া';
-    const defUpz = 'শিবগঞ্জ';
-    const mouzas = getMouzasForUpazila(defUpz);
-    const defMouza = mouzas[0]?.mouza || 'গুজিয়া';
-    const jl = mouzas[0]?.jl_no || '1';
-
-    setDistrictsList(getDistrictsForDivision(defDiv));
-    setUpazilasList(getUpazilasForDistrict(defDist));
-    setMouzasList(mouzas);
+    setDistrictsList([]);
+    setUpazilasList([]);
+    setMouzasList([]);
     setFilter({
-      division: defDiv,
-      district: defDist,
-      upazila: defUpz,
-      mouza: defMouza,
-      jl_no: jl,
+      division: '',
+      district: '',
+      upazila: '',
+      mouza: '',
+      jl_no: '',
       dag_no: '',
       khatian_no: ''
     });
@@ -299,14 +294,13 @@ export default function P5CitizenVerify() {
           color: '#cbd5e1'
         }}>
           <span style={{ color: '#64748b', fontWeight: '600' }}>নির্বাচন ক্রম:</span>
-          <span style={{ color: '#22c55e', fontWeight: '700' }}>{filter.division}</span>
+          {filter.division ? <span style={{ color: '#22c55e', fontWeight: '700' }}>{filter.division}</span> : <span style={{ color: '#475569' }}>বিভাগ বাছাই করুন</span>}
           <ChevronRight size={13} color="#64748b" />
-          <span style={{ color: '#3b82f6', fontWeight: '700' }}>{filter.district}</span>
+          {filter.district ? <span style={{ color: '#3b82f6', fontWeight: '700' }}>{filter.district}</span> : <span style={{ color: '#475569' }}>জেলা</span>}
           <ChevronRight size={13} color="#64748b" />
-          <span style={{ color: '#f59e0b', fontWeight: '700' }}>{filter.upazila}</span>
+          {filter.upazila ? <span style={{ color: '#f59e0b', fontWeight: '700' }}>{filter.upazila}</span> : <span style={{ color: '#475569' }}>উপজেলা</span>}
           <ChevronRight size={13} color="#64748b" />
-          <span style={{ color: '#ec4899', fontWeight: '700' }}>{filter.mouza}</span>
-          <span style={{ color: '#94a3b8' }}>(জে.এল {filter.jl_no})</span>
+          {filter.mouza ? <span style={{ color: '#ec4899', fontWeight: '700' }}>{filter.mouza}{filter.jl_no ? ` (জে.এল ${filter.jl_no})` : ''}</span> : <span style={{ color: '#475569' }}>মৌজা</span>}
           {filter.dag_no && (
             <>
               <ChevronRight size={13} color="#64748b" />
@@ -327,6 +321,7 @@ export default function P5CitizenVerify() {
                 value={filter.division}
                 onChange={e => handleDivisionChange(e.target.value)}
               >
+                <option value="">— বিভাগ নির্বাচন করুন —</option>
                 {BANGLADESH_DIVISIONS.map(div => (
                   <option key={div} value={div}>{div}</option>
                 ))}
@@ -341,7 +336,9 @@ export default function P5CitizenVerify() {
                 className="input-field"
                 value={filter.district}
                 onChange={e => handleDistrictChange(e.target.value)}
+                disabled={!filter.division}
               >
+                <option value="">— জেলা নির্বাচন করুন —</option>
                 {districtsList.map(dist => (
                   <option key={dist} value={dist}>{dist}</option>
                 ))}
@@ -356,7 +353,9 @@ export default function P5CitizenVerify() {
                 className="input-field"
                 value={filter.upazila}
                 onChange={e => handleUpazilaChange(e.target.value)}
+                disabled={!filter.district}
               >
+                <option value="">— উপজেলা নির্বাচন করুন —</option>
                 {upazilasList.map(upz => (
                   <option key={upz} value={upz}>{upz}</option>
                 ))}
@@ -374,7 +373,9 @@ export default function P5CitizenVerify() {
                 className="input-field"
                 value={filter.mouza}
                 onChange={e => handleMouzaChange(e.target.value)}
+                disabled={!filter.upazila}
               >
+                <option value="">— মৌজা নির্বাচন করুন —</option>
                 {mouzasList.map(m => (
                   <option key={m.mouza} value={m.mouza}>
                     {m.mouza} (জে.এল {m.jl_no})
