@@ -5,7 +5,8 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import {
   MapPin, Search, Layers, ShieldCheck, AlertTriangle,
-  Info, ExternalLink, RefreshCw, ZoomIn, ZoomOut, CheckCircle
+  Info, ExternalLink, RefreshCw, ZoomIn, ZoomOut, CheckCircle,
+  Sliders, Printer, Share2, Compass, Eye, Filter, FileText, ChevronRight
 } from 'lucide-react';
 
 export default function GisMouzaMap() {
@@ -14,37 +15,54 @@ export default function GisMouzaMap() {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const geojsonLayerRef = useRef(null);
-
-  const [loading, setLoading] = useState(true);
-  const [mouzas, setMouzas] = useState([]);
-  const [selectedMouza, setSelectedMouza] = useState(searchParams.get('mouza') || '');
-  const [searchDag, setSearchDag] = useState(searchParams.get('dag_no') || '');
-  const [selectedPlot, setSelectedPlot] = useState(null);
-  const [tileLayerType, setTileLayerType] = useState('osm'); // 'osm' or 'satellite'
+  const markersGroupRef = useRef(null);
   const tileLayerRef = useRef(null);
 
-  // Initialize Map
+  // Filter States
+  const [division, setDivision] = useState('রাজশাহী');
+  const [district, setDistrict] = useState('বগুড়া');
+  const [upazila, setUpazila] = useState('শিবগঞ্জ');
+  const [mouzas, setMouzas] = useState([]);
+  const [selectedMouza, setSelectedMouza] = useState(searchParams.get('mouza') || 'গুজিয়া');
+  const [searchDag, setSearchDag] = useState(searchParams.get('dag_no') || '');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [availableDags, setAvailableDags] = useState([]);
+
+  // Map Display States
+  const [tileLayerType, setTileLayerType] = useState('satellite'); // 'satellite', 'cadastral', 'osm'
+  const [plotOpacity, setPlotOpacity] = useState(0.45);
+  const [showLabels, setShowLabels] = useState(true);
+  const [selectedPlot, setSelectedPlot] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [copiedGps, setCopiedGps] = useState(false);
+
+  // Initialize Map Instance
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
     if (!mapInstanceRef.current) {
-      // Shibganj Upazila Coordinates
+      // Initialize Leaflet map centered at Shibganj Upazila, Bogura
       const map = L.map(mapContainerRef.current, {
-        center: [24.9961, 89.3323],
-        zoom: 14,
+        center: [24.9982, 89.3320],
+        zoom: 16,
         zoomControl: false,
+        attributionControl: false,
       });
 
-      // Add zoom control top-right
+      // Zoom Control Top-Right
       L.control.zoom({ position: 'topright' }).addTo(map);
 
-      // Add default tile layer
-      const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors | e-ভূমি GIS',
-        maxZoom: 19,
-      }).addTo(map);
+      // Scale Bar (meters / km) for real cadastral survey feel
+      L.control.scale({ position: 'bottomleft', imperial: false, metric: true }).addTo(map);
 
-      tileLayerRef.current = osmLayer;
+      // Initial Esri World Imagery (High-Res Satellite)
+      const initialLayer = L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        { maxZoom: 19 }
+      ).addTo(map);
+
+      tileLayerRef.current = initialLayer;
+      markersGroupRef.current = L.layerGroup().addTo(map);
       mapInstanceRef.current = map;
     }
 
@@ -56,7 +74,7 @@ export default function GisMouzaMap() {
     };
   }, []);
 
-  // Handle Tile Layer switch (Road vs Satellite)
+  // Handle Basemap Layer Switcher
   useEffect(() => {
     if (!mapInstanceRef.current) return;
     const map = mapInstanceRef.current;
@@ -66,130 +84,183 @@ export default function GisMouzaMap() {
     }
 
     if (tileLayerType === 'satellite') {
+      // High-Resolution Satellite Imagery with clear field ail & ponds
       tileLayerRef.current = L.tileLayer(
         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-        {
-          attribution: 'Tiles &copy; Esri, Maxar, Earthstar Geographics | e-ভূমি স্যাটেলাইট',
-          maxZoom: 18,
-        }
+        { maxZoom: 19 }
+      ).addTo(map);
+    } else if (tileLayerType === 'cadastral') {
+      // Cadastral Survey Blueprint style (Clean light topographic survey)
+      tileLayerRef.current = L.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+        { maxZoom: 19 }
       ).addTo(map);
     } else {
-      tileLayerRef.current = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors | e-ভূমি GIS',
-        maxZoom: 19,
-      }).addTo(map);
+      // Standard OpenStreetMap
+      tileLayerRef.current = L.tileLayer(
+        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        { maxZoom: 19 }
+      ).addTo(map);
     }
   }, [tileLayerType]);
 
-  // Fetch Mouza list & Plots
-  const fetchMapData = async () => {
+  // Load Filter Options & Mouzas
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const res = await axios.get('/api/gis/filter-options');
+        if (res.data.success) {
+          setMouzas(res.data.mouzas || []);
+          setAvailableDags(res.data.dag_numbers || []);
+        }
+      } catch (err) {
+        console.error('Filter options error:', err);
+      }
+    };
+    fetchOptions();
+  }, []);
+
+  // Fetch and Render Cadastral Plots
+  const fetchAndRenderPlots = async () => {
     setLoading(true);
     try {
-      // Fetch overview
-      const overviewRes = await axios.get('/api/gis/overview');
-      if (overviewRes.data.success) {
-        setMouzas(overviewRes.data.data.mouzas || []);
-      }
-
-      // Fetch Plots with active filters
       const params = {};
       if (selectedMouza) params.mouza = selectedMouza;
       if (searchDag) params.dag_no = searchDag;
+      if (statusFilter !== 'all') params.signal_filter = statusFilter;
 
-      const plotsRes = await axios.get('/api/gis/plots', { params });
-      const geojsonData = plotsRes.data;
+      const res = await axios.get('/api/gis/plots', { params });
+      const geojsonData = res.data;
 
       if (mapInstanceRef.current && geojsonData && geojsonData.features) {
         const map = mapInstanceRef.current;
 
-        // Remove existing GeoJSON layer
+        // Clear existing plot polygons
         if (geojsonLayerRef.current) {
           map.removeLayer(geojsonLayerRef.current);
         }
+        // Clear existing plot number markers
+        if (markersGroupRef.current) {
+          markersGroupRef.current.clearLayers();
+        }
 
-        // Create new GeoJSON Layer with styles and interactions
+        // Add GeoJSON Cadastral Polygon Layer
         const layer = L.geoJSON(geojsonData, {
           style: (feature) => {
             const isSelected = selectedPlot && selectedPlot.dag_no === feature.properties.dag_no;
             return {
-              color: isSelected ? '#2563eb' : (feature.properties.color || '#16a34a'),
-              weight: isSelected ? 3.5 : 2,
-              opacity: 0.9,
-              fillColor: feature.properties.color || '#16a34a',
-              fillOpacity: isSelected ? 0.65 : 0.35,
+              color: isSelected ? '#3b82f6' : (feature.properties.color || '#16a34a'),
+              weight: isSelected ? 4 : 2.5,
+              opacity: 0.95,
+              fillColor: isSelected ? '#60a5fa' : (feature.properties.color || '#16a34a'),
+              fillOpacity: isSelected ? 0.75 : plotOpacity,
+              dashArray: feature.properties.signal === 'danger' ? '4, 4' : null,
             };
           },
           onEachFeature: (feature, layerItem) => {
             const p = feature.properties;
 
-            // Bind tooltip
+            // Hover Tooltip with Land Details
             layerItem.bindTooltip(
-              `<div style="font-weight:700;font-size:12px;">দাগ নং: ${p.dag_no}</div><div style="font-size:11px;color:#475569;">মৌজা: ${p.mouza} (${p.statusLabel})</div>`,
+              `<div style="font-family:'Inter','Hind Siliguri',sans-serif;padding:3px 6px;">
+                <div style="font-weight:800;font-size:13px;color:#0f172a;">দাগ নং: ${p.dag_no}</div>
+                <div style="font-size:11px;color:#16a34a;font-weight:600;">মৌজা: ${p.mouza} (জেএল ${p.jl_no})</div>
+                <div style="font-size:10px;color:#64748b;">শ্রেণি: ${p.land_type} · ${p.area_decimal} শতাংশ</div>
+              </div>`,
               { sticky: true, className: 'leaflet-custom-tooltip' }
             );
 
-            // Bind click event
+            // Click Event to Inspect
             layerItem.on('click', () => {
               setSelectedPlot(p);
               if (p.centroid) {
-                map.flyTo(p.centroid, 16, { duration: 1 });
+                map.flyTo(p.centroid, 17, { duration: 0.8 });
               }
             });
 
-            // Hover effects
+            // Hover micro-animations
             layerItem.on('mouseover', () => {
-              layerItem.setStyle({
-                fillOpacity: 0.65,
-                weight: 3,
-              });
+              layerItem.setStyle({ weight: 3.8, fillOpacity: 0.7 });
             });
             layerItem.on('mouseout', () => {
               const isSelected = selectedPlot && selectedPlot.dag_no === p.dag_no;
               layerItem.setStyle({
-                fillOpacity: isSelected ? 0.65 : 0.35,
-                weight: isSelected ? 3.5 : 2,
+                weight: isSelected ? 4 : 2.5,
+                fillOpacity: isSelected ? 0.75 : plotOpacity,
               });
             });
+
+            // Add Permanent Plot Number Stamp on Map (CS/RS Cadastral Map Style)
+            if (showLabels && p.centroid) {
+              const labelIcon = L.divIcon({
+                className: 'cadastral-plot-label',
+                html: `<div style="
+                  background: rgba(15, 23, 42, 0.85);
+                  color: #ffffff;
+                  border: 1.5px solid ${p.color};
+                  font-size: 11px;
+                  font-weight: 800;
+                  padding: 2px 6px;
+                  border-radius: 6px;
+                  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+                  white-space: nowrap;
+                  pointer-events: none;
+                  transform: translate(-50%, -50%);
+                ">দাগ ${p.dag_no}</div>`,
+                iconSize: [40, 20],
+              });
+              L.marker(p.centroid, { icon: labelIcon, interactive: false }).addTo(markersGroupRef.current);
+            }
           },
         }).addTo(map);
 
         geojsonLayerRef.current = layer;
 
-        // If specific search, auto select and fly
+        // Auto fly to searched Dag or Mouza bounds
         if (searchDag && geojsonData.features.length > 0) {
           const matched = geojsonData.features.find(f => f.properties.dag_no === searchDag);
           if (matched) {
             setSelectedPlot(matched.properties);
             if (matched.properties.centroid) {
-              map.flyTo(matched.properties.centroid, 16, { duration: 1.2 });
+              map.flyTo(matched.properties.centroid, 17, { duration: 1 });
             }
           }
+        } else if (geojsonData.features.length > 0 && selectedMouza) {
+          map.flyToBounds(layer.getBounds(), { padding: [50, 50], duration: 1 });
         }
       }
     } catch (err) {
-      console.error('GIS Error:', err);
+      console.error('Plots fetch error:', err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchMapData();
-  }, [selectedMouza]);
+    fetchAndRenderPlots();
+  }, [selectedMouza, statusFilter, showLabels, plotOpacity]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    fetchMapData();
+    fetchAndRenderPlots();
   };
 
-  const handleReset = () => {
-    setSelectedMouza('');
+  const handleResetFilters = () => {
+    setSelectedMouza('গুজিয়া');
     setSearchDag('');
+    setStatusFilter('all');
     setSelectedPlot(null);
     if (mapInstanceRef.current) {
-      mapInstanceRef.current.flyTo([24.9961, 89.3323], 14, { duration: 1 });
+      mapInstanceRef.current.flyTo([24.9982, 89.3320], 16, { duration: 1 });
     }
-    setTimeout(fetchMapData, 50);
+  };
+
+  const handleCopyGps = (centroid) => {
+    if (!centroid) return;
+    const text = `${centroid[0].toFixed(5)}, ${centroid[1].toFixed(5)}`;
+    navigator.clipboard.writeText(text);
+    setCopiedGps(true);
+    setTimeout(() => setCopiedGps(false), 2000);
   };
 
   return (
@@ -199,13 +270,16 @@ export default function GisMouzaMap() {
       background: '#f8fafc',
       display: 'flex',
       flexDirection: 'column',
+      position: 'relative',
     }}>
-      {/* ── Top Header & Filter Toolbar ── */}
+      {/* ══════════════════════════════════════════
+          TOP CADASTRAL FILTER BAR (Real & Interactive)
+      ══════════════════════════════════════════ */}
       <header style={{
         background: '#ffffff',
-        borderBottom: '1px solid #e2e8f0',
-        padding: '14px 20px',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+        borderBottom: '1.5px solid #e2e8f0',
+        padding: '12px 20px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
         zIndex: 500,
       }}>
         <div style={{
@@ -220,55 +294,69 @@ export default function GisMouzaMap() {
           {/* Title Area */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '10px',
-              background: '#ecfdf5',
-              border: '1.5px solid #a7f3d0',
+              width: '42px',
+              height: '42px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #15803d, #16a34a)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '20px',
-              color: '#15803d',
+              fontSize: '22px',
+              color: '#ffffff',
+              boxShadow: '0 4px 12px rgba(22,163,74,0.25)',
+              flexShrink: 0,
             }}>
               🗺️
             </div>
             <div>
-              <h1 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', margin: 0, lineHeight: 1.2 }}>
-                ডিজিটাল মৌজা ও ক্যাডাস্ট্রাল ম্যাপ ভিউয়ার (GIS)
-              </h1>
-              <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '500' }}>
-                শিবগঞ্জ উপজেলা, বগুড়া জেলা · প্লট বাউন্ডারি ও রিয়েল-টাইম খতিয়ান ইন্টিগ্রেশন
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <h1 style={{ fontSize: '17px', fontWeight: '900', color: '#0f172a', margin: 0 }}>
+                  ডিজিটাল মৌজা ক্যাডাস্ট্রাল ম্যাপ (GIS)
+                </h1>
+                <span style={{
+                  background: '#ecfdf5', color: '#15803d', border: '1px solid #bbf7d0',
+                  fontSize: '10px', fontWeight: '800', padding: '1px 6px', borderRadius: '4px',
+                }}>
+                  CS/RS নকশা লাইভ
+                </span>
+              </div>
+              <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '600' }}>
+                রাজশাহী বিভাগ · বগুড়া জেলা · শিবগঞ্জ উপজেলা মডেল
               </div>
             </div>
           </div>
 
-          {/* Controls Form */}
+          {/* Filtering Controls Form */}
           <form onSubmit={handleSearchSubmit} style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            {/* Mouza Select */}
-            <select
-              value={selectedMouza}
-              onChange={(e) => setSelectedMouza(e.target.value)}
-              style={{
-                padding: '8px 12px',
-                borderRadius: '8px',
-                border: '1px solid #cbd5e1',
-                background: '#ffffff',
-                fontSize: '13px',
-                color: '#334155',
-                fontWeight: '600',
-                cursor: 'pointer',
-              }}
-            >
-              <option value="">সকল সিড মৌজা (All Mouzas)</option>
-              {mouzas.map((m) => (
-                <option key={m.jl_no} value={m.mouza}>
-                  জেএল {m.jl_no}: {m.mouza}
-                </option>
-              ))}
-            </select>
+            {/* Mouza Cascading Filter */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ fontSize: '12px', fontWeight: '700', color: '#475569' }}>মৌজা:</span>
+              <select
+                value={selectedMouza}
+                onChange={(e) => {
+                  setSelectedMouza(e.target.value);
+                  setSearchDag('');
+                }}
+                style={{
+                  padding: '7px 12px',
+                  borderRadius: '8px',
+                  border: '1.5px solid #16a34a',
+                  background: '#f0fdf4',
+                  fontSize: '13px',
+                  color: '#15803d',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                }}
+              >
+                {mouzas.map((m, idx) => (
+                  <option key={idx} value={m}>
+                    মৌজা: {m} (জেএল {idx + 1})
+                  </option>
+                ))}
+              </select>
+            </div>
 
-            {/* Dag Search */}
+            {/* Quick Dag Search with Autocomplete */}
             <div style={{ position: 'relative' }}>
               <input
                 type="text"
@@ -276,20 +364,43 @@ export default function GisMouzaMap() {
                 value={searchDag}
                 onChange={(e) => setSearchDag(e.target.value)}
                 style={{
-                  padding: '8px 12px 8px 32px',
+                  padding: '7px 12px 7px 30px',
                   borderRadius: '8px',
                   border: '1px solid #cbd5e1',
                   fontSize: '13px',
-                  width: '150px',
+                  width: '140px',
+                  background: '#ffffff',
                 }}
               />
-              <Search size={14} style={{ position: 'absolute', left: '10px', top: '11px', color: '#94a3b8' }} />
+              <Search size={14} style={{ position: 'absolute', left: '9px', top: '10px', color: '#94a3b8' }} />
             </div>
 
+            {/* Status Traffic Light Filter */}
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              style={{
+                padding: '7px 10px',
+                borderRadius: '8px',
+                border: '1px solid #cbd5e1',
+                fontSize: '12px',
+                color: '#334155',
+                fontWeight: '600',
+                background: '#ffffff',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="all">সকল জমি (All Status)</option>
+              <option value="safe">🟢 নির্ভেজাল সক্রিয় (Safe)</option>
+              <option value="warning">🟡 নামজারি চলমান (Lock)</option>
+              <option value="danger">🔴 খাস / মামলাভুক্ত (Disputed)</option>
+            </select>
+
+            {/* Action Buttons */}
             <button
               type="submit"
               style={{
-                padding: '8px 14px',
+                padding: '7px 14px',
                 background: '#16a34a',
                 color: '#fff',
                 border: 'none',
@@ -300,17 +411,18 @@ export default function GisMouzaMap() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '5px',
+                boxShadow: '0 2px 6px rgba(22,163,74,0.25)',
               }}
             >
-              অনুসন্ধান
+              <Search size={14} /> খুঁজুন
             </button>
 
             <button
               type="button"
-              onClick={handleReset}
-              title="রিসেট"
+              onClick={handleResetFilters}
+              title="রিসেট করুন"
               style={{
-                padding: '8px 10px',
+                padding: '7px 10px',
                 background: '#f1f5f9',
                 border: '1px solid #cbd5e1',
                 borderRadius: '8px',
@@ -318,105 +430,184 @@ export default function GisMouzaMap() {
                 color: '#475569',
               }}
             >
-              <RefreshCw size={14} />
-            </button>
-
-            {/* Layer Switcher Button */}
-            <button
-              type="button"
-              onClick={() => setTileLayerType(t => t === 'osm' ? 'satellite' : 'osm')}
-              style={{
-                padding: '8px 12px',
-                background: tileLayerType === 'satellite' ? '#0f172a' : '#ffffff',
-                color: tileLayerType === 'satellite' ? '#ffffff' : '#334155',
-                border: '1px solid #cbd5e1',
-                borderRadius: '8px',
-                fontSize: '12px',
-                fontWeight: '700',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-              }}
-            >
-              <Layers size={14} /> {tileLayerType === 'satellite' ? '🛰️ স্যাটেলাইট সক্রিয়' : '🗺️ রোড ম্যাপ'}
+              <RefreshCw size={13} />
             </button>
           </form>
         </div>
       </header>
 
-      {/* ── Main Map View Area ── */}
+      {/* ── Main Map Viewport ── */}
       <div style={{ flex: 1, position: 'relative', display: 'flex', overflow: 'hidden' }}>
         {/* Leaflet Map Div */}
-        <div ref={mapContainerRef} style={{ width: '100%', height: 'calc(100vh - 130px)', zIndex: 1 }} />
+        <div ref={mapContainerRef} style={{ width: '100%', height: 'calc(100vh - 128px)', zIndex: 1 }} />
 
-        {/* Floating Legend Badge */}
+        {/* ── Realistic Cadastral Controls Panel (Top-Left) ── */}
+        <div style={{
+          position: 'absolute',
+          top: '16px',
+          left: '16px',
+          background: 'rgba(255, 255, 255, 0.95)',
+          border: '1.5px solid #cbd5e1',
+          borderRadius: '12px',
+          padding: '10px 14px',
+          boxShadow: '0 6px 20px rgba(0,0,0,0.12)',
+          zIndex: 400,
+          backdropFilter: 'blur(10px)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          maxWidth: '280px',
+        }}>
+          <div style={{ fontSize: '11px', fontWeight: '800', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <Layers size={13} color="#16a34a" /> ম্যাপ টাইপ ও অপটিমাইজেশন
+          </div>
+
+          {/* Map Layer Switcher */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
+            <button
+              type="button"
+              onClick={() => setTileLayerType('satellite')}
+              style={{
+                padding: '5px',
+                borderRadius: '6px',
+                border: tileLayerType === 'satellite' ? '1.5px solid #16a34a' : '1px solid #cbd5e1',
+                background: tileLayerType === 'satellite' ? '#ecfdf5' : '#ffffff',
+                color: tileLayerType === 'satellite' ? '#15803d' : '#334155',
+                fontSize: '10px',
+                fontWeight: '700',
+                cursor: 'pointer',
+              }}
+            >
+              🛰️ স্যাটেলাইট
+            </button>
+            <button
+              type="button"
+              onClick={() => setTileLayerType('cadastral')}
+              style={{
+                padding: '5px',
+                borderRadius: '6px',
+                border: tileLayerType === 'cadastral' ? '1.5px solid #16a34a' : '1px solid #cbd5e1',
+                background: tileLayerType === 'cadastral' ? '#ecfdf5' : '#ffffff',
+                color: tileLayerType === 'cadastral' ? '#15803d' : '#334155',
+                fontSize: '10px',
+                fontWeight: '700',
+                cursor: 'pointer',
+              }}
+            >
+              📜 নকশা শিট
+            </button>
+            <button
+              type="button"
+              onClick={() => setTileLayerType('osm')}
+              style={{
+                padding: '5px',
+                borderRadius: '6px',
+                border: tileLayerType === 'osm' ? '1.5px solid #16a34a' : '1px solid #cbd5e1',
+                background: tileLayerType === 'osm' ? '#ecfdf5' : '#ffffff',
+                color: tileLayerType === 'osm' ? '#15803d' : '#334155',
+                fontSize: '10px',
+                fontWeight: '700',
+                cursor: 'pointer',
+              }}
+            >
+              🗺️ রোড ম্যাপ
+            </button>
+          </div>
+
+          {/* Opacity Slider */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginTop: '2px' }}>
+            <span style={{ fontSize: '10px', color: '#475569', fontWeight: '600' }}>দাগ ট্রান্সপারেন্সি:</span>
+            <input
+              type="range"
+              min="0.1"
+              max="0.85"
+              step="0.05"
+              value={plotOpacity}
+              onChange={(e) => setPlotOpacity(parseFloat(e.target.value))}
+              style={{ width: '90px', cursor: 'pointer' }}
+            />
+          </div>
+
+          {/* Toggle Labels */}
+          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '10px', color: '#334155', fontWeight: '600', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={showLabels}
+              onChange={(e) => setShowLabels(e.target.checked)}
+            />
+            দাগ নম্বর স্ট্যাম্প প্রদর্শন করুন
+          </label>
+        </div>
+
+        {/* ── Floating Legend Guide (Bottom-Left) ── */}
         <div style={{
           position: 'absolute',
           bottom: '24px',
-          left: '20px',
-          background: 'rgba(255, 255, 255, 0.94)',
-          border: '1px solid #e2e8f0',
+          left: '16px',
+          background: 'rgba(255, 255, 255, 0.95)',
+          border: '1.5px solid #e2e8f0',
           borderRadius: '12px',
           padding: '10px 14px',
-          boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
           zIndex: 400,
           backdropFilter: 'blur(8px)',
           fontSize: '11px',
           fontWeight: '600',
           display: 'flex',
           flexDirection: 'column',
-          gap: '6px',
+          gap: '5px',
         }}>
           <div style={{ fontSize: '11px', fontWeight: '800', color: '#0f172a', marginBottom: '2px' }}>
-            দাগ নির্দেশিকা (Legend):
+            দাগ কালার কোড ও আইনি স্ট্যাটাস:
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#16a34a' }}>
-            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#16a34a', display: 'inline-block' }} />
-            নিরাপদ সক্রিয় জমি (Verified Active)
+            <span style={{ width: '11px', height: '11px', borderRadius: '3px', background: '#16a34a', display: 'inline-block' }} />
+            নিরাপদ নির্ভেজাল জমি (Verified Active)
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#d97706' }}>
-            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#d97706', display: 'inline-block' }} />
+            <span style={{ width: '11px', height: '11px', borderRadius: '3px', background: '#d97706', display: 'inline-block' }} />
             নামজারি প্রক্রিয়াধীন (Pending Lock)
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#dc2626' }}>
-            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#dc2626', display: 'inline-block' }} />
-            সরকারি খাস / মামলাভুক্ত জমি (Disputed)
+            <span style={{ width: '11px', height: '11px', borderRadius: '3px', background: '#dc2626', display: 'inline-block' }} />
+            সরকারি খাস / আদালতের মামলাভুক্ত (Disputed)
           </div>
         </div>
 
-        {/* Selected Plot Details Drawer / Inspector Card */}
+        {/* ── Selected Plot Cadastral Inspector (Right Floating Card) ── */}
         {selectedPlot && (
           <div style={{
             position: 'absolute',
-            top: '20px',
-            right: '20px',
-            width: '340px',
-            maxWidth: 'calc(100vw - 40px)',
-            background: 'rgba(255, 255, 255, 0.96)',
-            border: `2px solid ${selectedPlot.color || '#16a34a'}`,
-            borderRadius: '16px',
-            padding: '20px',
-            boxShadow: '0 12px 32px rgba(0,0,0,0.14)',
+            top: '16px',
+            right: '16px',
+            width: '360px',
+            maxWidth: 'calc(100vw - 32px)',
+            background: 'rgba(255, 255, 255, 0.98)',
+            border: `2.5px solid ${selectedPlot.color || '#16a34a'}`,
+            borderRadius: '18px',
+            padding: '22px 20px',
+            boxShadow: '0 16px 40px rgba(0,0,0,0.18)',
             zIndex: 450,
             backdropFilter: 'blur(12px)',
             animation: 'fadeIn 0.2s ease',
+            maxHeight: 'calc(100vh - 160px)',
+            overflowY: 'auto',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
               <div>
                 <span style={{
-                  fontSize: '10px',
+                  fontSize: '11px',
                   fontWeight: '800',
                   color: selectedPlot.color,
                   background: `${selectedPlot.color}15`,
-                  border: `1px solid ${selectedPlot.color}40`,
-                  padding: '2px 8px',
+                  border: `1.5px solid ${selectedPlot.color}50`,
+                  padding: '2px 9px',
                   borderRadius: '999px',
-                  textTransform: 'uppercase',
                 }}>
                   {selectedPlot.statusLabel}
                 </span>
-                <h3 style={{ fontSize: '20px', fontWeight: '900', color: '#0f172a', margin: '6px 0 0' }}>
+                <h3 style={{ fontSize: '22px', fontWeight: '900', color: '#0f172a', margin: '8px 0 0' }}>
                   দাগ নং: {selectedPlot.dag_no}
                 </h3>
               </div>
@@ -426,10 +617,10 @@ export default function GisMouzaMap() {
                   background: '#f1f5f9',
                   border: 'none',
                   borderRadius: '50%',
-                  width: '26px',
-                  height: '26px',
+                  width: '28px',
+                  height: '28px',
                   cursor: 'pointer',
-                  fontWeight: '700',
+                  fontWeight: '800',
                   color: '#64748b',
                 }}
               >
@@ -437,58 +628,70 @@ export default function GisMouzaMap() {
               </button>
             </div>
 
-            <div style={{ fontSize: '13px', color: '#475569', display: 'grid', gap: '8px', marginBottom: '18px' }}>
+            {/* Cadastral Land Attributes */}
+            <div style={{ fontSize: '13px', display: 'grid', gap: '9px', marginBottom: '18px', background: '#f8fafc', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#94a3b8' }}>মৌজা ও জেএল:</span>
-                <strong style={{ color: '#0f172a' }}>{selectedPlot.mouza} (জেএল: {selectedPlot.jl_no})</strong>
+                <span style={{ color: '#64748b', fontWeight: '500' }}>মৌজা ও জেএল:</span>
+                <strong style={{ color: '#0f172a' }}>{selectedPlot.mouza} (জেএল {selectedPlot.jl_no})</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#94a3b8' }}>খতিয়ান নং:</span>
+                <span style={{ color: '#64748b', fontWeight: '500' }}>নকশা শিট নং:</span>
+                <strong style={{ color: '#0f172a' }}>শিট নং {selectedPlot.sheet_no}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#64748b', fontWeight: '500' }}>খতিয়ান নং:</span>
                 <strong style={{ color: '#0f172a' }}>{selectedPlot.khatian_no}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#94a3b8' }}>বর্তমান মালিক:</span>
+                <span style={{ color: '#64748b', fontWeight: '500' }}>জমির শ্রেণি:</span>
+                <strong style={{ color: '#16a34a' }}>{selectedPlot.land_type}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#64748b', fontWeight: '500' }}>জমির পরিমাণ:</span>
+                <strong style={{ color: '#047857' }}>
+                  {selectedPlot.area_decimal} শতাংশ ({selectedPlot.area_katha} কাঠা)
+                </strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#64748b', fontWeight: '500' }}>মালিকের নাম:</span>
                 <strong style={{ color: '#0f172a' }}>{selectedPlot.owner_name}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#94a3b8' }}>জমির পরিমাণ:</span>
-                <strong style={{ color: '#16a34a' }}>{selectedPlot.area_decimal} শতাংশ</strong>
+                <span style={{ color: '#64748b', fontWeight: '500' }}>দলিল ও ভলিউম:</span>
+                <span style={{ fontSize: '11px', color: '#334155', fontWeight: '700' }}>
+                  {selectedPlot.deed_no} · {selectedPlot.volume_book}
+                </span>
               </div>
-              {selectedPlot.deed_no && (
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#94a3b8' }}>দলিল নম্বর:</span>
-                  <span style={{ fontSize: '12px', color: '#0f172a', fontWeight: '600' }}>{selectedPlot.deed_no}</span>
-                </div>
-              )}
             </div>
 
-            {/* Warning note if legal issue */}
+            {/* Legal Warning Notice (If Khas or Stay Order) */}
             {selectedPlot.signal === 'danger' && (
               <div style={{
                 background: '#fee2e2',
-                border: '1px solid #fca5a5',
-                color: '#dc2626',
-                borderRadius: '8px',
-                padding: '8px 10px',
+                border: '1.5px solid #fca5a5',
+                color: '#b91c1c',
+                borderRadius: '10px',
+                padding: '10px 12px',
                 fontSize: '11px',
-                fontWeight: '600',
+                fontWeight: '700',
                 marginBottom: '14px',
                 display: 'flex',
-                gap: '6px',
+                gap: '8px',
+                lineHeight: 1.5,
               }}>
-                <AlertTriangle size={15} style={{ flexShrink: 0 }} />
-                <span>{selectedPlot.legal_details || 'সতর্কতা: জমিতে আইনগত বাধা রয়েছে!'}</span>
+                <AlertTriangle size={16} style={{ flexShrink: 0 }} />
+                <span>{selectedPlot.legal_details || 'সতর্কতা: এই জমিটি ক্রয়-বিক্রয়ে আইনগত নিষেধাজ্ঞা রয়েছে!'}</span>
               </div>
             )}
 
             {/* Action Buttons */}
             <div style={{ display: 'grid', gap: '8px' }}>
               <button
-                onClick={() => navigate(`/verify?mouza=${encodeURIComponent(selectedPlot.mouza)}&dag_no=${selectedPlot.dag_no}`)}
+                onClick={() => navigate(`/verify?mouza=${encodeURIComponent(selectedPlot.mouza)}&dag_no=${selectedPlot.dag_no}&khatian_no=${selectedPlot.khatian_no}`)}
                 style={{
                   width: '100%',
-                  padding: '10px',
-                  background: '#16a34a',
+                  padding: '11px',
+                  background: 'linear-gradient(135deg, #1a6b3c, #16a34a)',
                   color: '#ffffff',
                   border: 'none',
                   borderRadius: '10px',
@@ -499,10 +702,55 @@ export default function GisMouzaMap() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '6px',
+                  boxShadow: '0 4px 14px rgba(22,163,74,0.3)',
                 }}
               >
-                <CheckCircle size={15} /> P5 পূর্ণাঙ্গ ভেরিফিকেশন দেখুন
+                <CheckCircle size={15} /> P5 পূর্ণাঙ্গ খতিয়ান ও দলিল যাচাই
               </button>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  style={{
+                    padding: '8px',
+                    background: '#ffffff',
+                    border: '1.5px solid #cbd5e1',
+                    borderRadius: '8px',
+                    color: '#334155',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <Printer size={13} /> নকশা প্রিন্ট
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleCopyGps(selectedPlot.centroid)}
+                  style={{
+                    padding: '8px',
+                    background: '#ffffff',
+                    border: '1.5px solid #cbd5e1',
+                    borderRadius: '8px',
+                    color: '#334155',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <Share2 size={13} /> {copiedGps ? '✓ কপি হয়েছে' : 'GPS কপি'}
+                </button>
+              </div>
             </div>
           </div>
         )}
