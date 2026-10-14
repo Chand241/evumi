@@ -599,31 +599,43 @@ select option:checked {
 .hero-fade { animation: heroFadeIn 0.6s ease-out forwards; }
 
 /* ============================================================
-   Dashboard Dark Theme — For all dashboard pages
+   Dashboard Light Theme (Matching Home Page Standard)
+   Applied to all role dashboards, panels, and verification pages
    ============================================================ */
-.dashboard-dark {
-  background: linear-gradient(160deg, #0f172a 0%, #1a2332 50%, #0c1a2e 100%);
+.dashboard-dark,
+.dashboard-light {
+  background-color: #f0f4f8;
+  background-image:
+    linear-gradient(rgba(26, 107, 60, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26, 107, 60, 0.035) 1px, transparent 1px);
+  background-size: 40px 40px;
   min-height: calc(100vh - 64px);
+  color: #0f172a;
 }
 
-/* Glass cards inside dashboard get dark backgrounds */
-.dashboard-dark .glass-card {
-  background: rgba(15, 23, 42, 0.85);
-  border-color: rgba(255, 255, 255, 0.08);
+/* Glass cards inside dashboard get crisp white light backgrounds */
+.dashboard-dark .glass-card,
+.dashboard-light .glass-card {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
   backdrop-filter: blur(12px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+  color: #0f172a;
 }
 
-.dashboard-dark .glass-card:hover {
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.25);
+.dashboard-dark .glass-card:hover,
+.dashboard-light .glass-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04) !important;
 }
 
-.dashboard-dark .glass-card-light {
-  background: rgba(30, 41, 59, 0.6);
-  border-color: rgba(255, 255, 255, 0.06);
+.dashboard-dark .glass-card-light,
+.dashboard-light .glass-card-light {
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #1e293b;
 }
 
-/* Override input styling inside dashboard dark */
+/* Form inputs & selects — clean light styling */
 .dashboard-dark .input-field,
 .dashboard-dark input[type="text"],
 .dashboard-dark input[type="email"],
@@ -631,10 +643,19 @@ select option:checked {
 .dashboard-dark input[type="number"],
 .dashboard-dark input[type="tel"],
 .dashboard-dark select,
-.dashboard-dark textarea {
-  background-color: rgba(15, 23, 42, 0.8) !important;
-  color: #e2e8f0 !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
+.dashboard-dark textarea,
+.dashboard-light .input-field,
+.dashboard-light input[type="text"],
+.dashboard-light input[type="email"],
+.dashboard-light input[type="password"],
+.dashboard-light input[type="number"],
+.dashboard-light input[type="tel"],
+.dashboard-light select,
+.dashboard-light textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
 }
 
 .dashboard-dark .input-field:focus,
@@ -644,106 +665,200 @@ select option:checked {
 .dashboard-dark input[type="number"]:focus,
 .dashboard-dark input[type="tel"]:focus,
 .dashboard-dark select:focus,
-.dashboard-dark textarea:focus {
-  background-color: rgba(15, 23, 42, 0.95) !important;
+.dashboard-dark textarea:focus,
+.dashboard-light .input-field:focus,
+.dashboard-light input[type="text"]:focus,
+.dashboard-light input[type="email"]:focus,
+.dashboard-light input[type="password"]:focus,
+.dashboard-light input[type="number"]:focus,
+.dashboard-light input[type="tel"]:focus,
+.dashboard-light select:focus,
+.dashboard-light textarea:focus {
+  background-color: #ffffff !important;
   border-color: var(--primary) !important;
-  box-shadow: 0 0 0 3px rgba(26, 107, 60, 0.2) !important;
-  color: #f1f5f9 !important;
+  box-shadow: 0 0 0 3px rgba(26, 107, 60, 0.15) !important;
+  color: #0f172a !important;
 }
 
 .dashboard-dark .input-field::placeholder,
 .dashboard-dark input::placeholder,
-.dashboard-dark textarea::placeholder {
-  color: #64748b !important;
+.dashboard-dark textarea::placeholder,
+.dashboard-light .input-field::placeholder,
+.dashboard-light input::placeholder,
+.dashboard-light textarea::placeholder {
+  color: #94a3b8 !important;
 }
 
 .dashboard-dark select option,
-.dashboard-dark select optgroup {
-  background-color: #1e293b !important;
-  color: #e2e8f0 !important;
+.dashboard-dark select optgroup,
+.dashboard-light select option,
+.dashboard-light select optgroup {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
 }
 
-/* Table styling in dark dashboard */
-.dashboard-dark table {
-  color: #cbd5e1;
+/* Table styling in light dashboard */
+.dashboard-dark table,
+.dashboard-light table {
+  color: #1e293b !important;
 }
 
-.dashboard-dark table td {
-  color: #cbd5e1;
+.dashboard-dark table td,
+.dashboard-light table td {
+  color: #334155 !important;
 }
 
-.dashboard-dark table strong {
-  color: #f1f5f9;
+.dashboard-dark table strong,
+.dashboard-light table strong {
+  color: #0f172a !important;
+}
+
+.dashboard-dark .data-table th,
+.dashboard-light .data-table th {
+  background: #f8fafc !important;
+  color: #475569 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  font-weight: 700;
+}
+
+.dashboard-dark .data-table td,
+.dashboard-light .data-table td {
+  color: #334155 !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.dashboard-dark .data-table tr:hover td,
+.dashboard-light .data-table tr:hover td {
+  background: #f8fafc !important;
 }
 
 /* Button overrides */
-.dashboard-dark .btn-secondary {
-  background: rgba(255, 255, 255, 0.06);
-  color: #e2e8f0;
-  border-color: rgba(255, 255, 255, 0.15);
+.dashboard-dark .btn-secondary,
+.dashboard-light .btn-secondary {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
 }
 
-.dashboard-dark .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.25);
+.dashboard-dark .btn-secondary:hover,
+.dashboard-light .btn-secondary:hover {
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
 }
 
-/* Data table dark */
-.dashboard-dark .data-table th {
-  background: rgba(15, 23, 42, 0.6);
-  color: #94a3b8;
-  border-bottom-color: rgba(255, 255, 255, 0.1);
-}
-
-.dashboard-dark .data-table td {
-  color: #cbd5e1;
-  border-bottom-color: rgba(255, 255, 255, 0.06);
-}
-
-.dashboard-dark .data-table tr:hover td {
-  background: rgba(255, 255, 255, 0.03);
-}
-
-/* ============================================================
-   Text Clarity & Contrast Boosters
-   ============================================================ */
-.dashboard-dark,
-.dashboard-dark p,
-.dashboard-dark span,
-.dashboard-dark div,
-.dashboard-dark td,
-.dashboard-dark th,
-.dashboard-dark label {
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* Elevate low-contrast secondary texts to bright readable slate */
-.dashboard-dark [style*="color: rgb(100, 116, 139)"],
-.dashboard-dark [style*="color: #64748b"],
-.dashboard-dark [style*="color: rgb(71, 85, 105)"],
-.dashboard-dark [style*="color: #475569"] {
-  color: #94a3b8 !important;
-}
-
-.dashboard-dark [style*="color: rgb(51, 65, 85)"],
-.dashboard-dark [style*="color: #334155"] {
-  color: #cbd5e1 !important;
-}
-
-/* High contrast for headings and titles */
+/* Headings — High contrast dark slate like Landing Page */
 .dashboard-dark h1,
 .dashboard-dark h2,
 .dashboard-dark h3,
-.dashboard-dark h4 {
-  color: #f8fafc !important;
+.dashboard-dark h4,
+.dashboard-light h1,
+.dashboard-light h2,
+.dashboard-light h3,
+.dashboard-light h4 {
+  color: #0f172a !important;
 }
 
-/* Ensure inputs in dark dashboard are clearly visible */
-.dashboard-dark .input-field::placeholder,
-.dashboard-dark input::placeholder,
-.dashboard-dark textarea::placeholder {
-  color: #94a3b8 !important;
+/* Inline dark style translations to crisp readable light theme */
+.dashboard-dark [style*="color: #f8fafc"],
+.dashboard-dark [style*="color: #f1f5f9"],
+.dashboard-dark [style*="color: rgb(248, 250, 252)"],
+.dashboard-dark [style*="color: rgb(241, 245, 249)"],
+.dashboard-light [style*="color: #f8fafc"],
+.dashboard-light [style*="color: #f1f5f9"],
+.dashboard-light [style*="color: rgb(248, 250, 252)"],
+.dashboard-light [style*="color: rgb(241, 245, 249)"] {
+  color: #0f172a !important;
+}
+
+.dashboard-dark [style*="color: #cbd5e1"],
+.dashboard-dark [style*="color: #e2e8f0"],
+.dashboard-dark [style*="color: rgb(203, 213, 225)"],
+.dashboard-dark [style*="color: rgb(226, 232, 240)"],
+.dashboard-light [style*="color: #cbd5e1"],
+.dashboard-light [style*="color: #e2e8f0"],
+.dashboard-light [style*="color: rgb(203, 213, 225)"],
+.dashboard-light [style*="color: rgb(226, 232, 240)"] {
+  color: #334155 !important;
+}
+
+.dashboard-dark [style*="color: #94a3b8"],
+.dashboard-dark [style*="color: rgb(148, 163, 184)"],
+.dashboard-light [style*="color: #94a3b8"],
+.dashboard-light [style*="color: rgb(148, 163, 184)"] {
+  color: #64748b !important;
+}
+
+/* Background chips and nested boxes */
+.dashboard-dark [style*="background: rgba(255, 255, 255, 0.03)"],
+.dashboard-dark [style*="background: rgba(255, 255, 255, 0.04)"],
+.dashboard-dark [style*="background: rgba(255, 255, 255, 0.05)"],
+.dashboard-dark [style*="background: rgba(255, 255, 255, 0.06)"],
+.dashboard-dark [style*="background: rgba(255, 255, 255, 0.08)"],
+.dashboard-dark [style*="background: rgba(0, 0, 0, 0.3)"],
+.dashboard-dark [style*="background: rgba(0, 0, 0, 0.2)"],
+.dashboard-light [style*="background: rgba(255, 255, 255, 0.03)"],
+.dashboard-light [style*="background: rgba(255, 255, 255, 0.04)"],
+.dashboard-light [style*="background: rgba(255, 255, 255, 0.05)"],
+.dashboard-light [style*="background: rgba(255, 255, 255, 0.06)"],
+.dashboard-light [style*="background: rgba(255, 255, 255, 0.08)"],
+.dashboard-light [style*="background: rgba(0, 0, 0, 0.3)"],
+.dashboard-light [style*="background: rgba(0, 0, 0, 0.2)"] {
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Low-contrast neon labels in dark mode to accessible bold colors in light mode */
+.dashboard-dark [style*="color: #86efac"],
+.dashboard-dark [style*="color: rgb(134, 239, 172)"],
+.dashboard-light [style*="color: #86efac"],
+.dashboard-light [style*="color: rgb(134, 239, 172)"] {
+  color: #15803d !important;
+}
+
+.dashboard-dark [style*="color: #6ee7b7"],
+.dashboard-dark [style*="color: rgb(110, 231, 183)"],
+.dashboard-light [style*="color: #6ee7b7"],
+.dashboard-light [style*="color: rgb(110, 231, 183)"] {
+  color: #047857 !important;
+}
+
+.dashboard-dark [style*="color: #93c5fd"],
+.dashboard-dark [style*="color: rgb(147, 197, 253)"],
+.dashboard-light [style*="color: #93c5fd"],
+.dashboard-light [style*="color: rgb(147, 197, 253)"] {
+  color: #1d4ed8 !important;
+}
+
+.dashboard-dark [style*="color: #bfdbfe"],
+.dashboard-dark [style*="color: rgb(191, 219, 254)"],
+.dashboard-light [style*="color: #bfdbfe"],
+.dashboard-light [style*="color: rgb(191, 219, 254)"] {
+  color: #1e40af !important;
+}
+
+.dashboard-dark [style*="color: #f472b6"],
+.dashboard-dark [style*="color: rgb(244, 114, 182)"],
+.dashboard-light [style*="color: #f472b6"],
+.dashboard-light [style*="color: rgb(244, 114, 182)"] {
+  color: #be185d !important;
+}
+
+.dashboard-dark [style*="color: #fef3c7"],
+.dashboard-dark [style*="color: rgb(254, 243, 199)"],
+.dashboard-light [style*="color: #fef3c7"],
+.dashboard-light [style*="color: rgb(254, 243, 199)"] {
+  color: #92400e !important;
+}
+
+/* Subtle border dividers */
+.dashboard-dark [style*="border-bottom: 1px solid rgba(255, 255, 255"],
+.dashboard-dark [style*="border-top: 1px solid rgba(255, 255, 255"],
+.dashboard-dark [style*="border: 1px solid rgba(255, 255, 255"],
+.dashboard-light [style*="border-bottom: 1px solid rgba(255, 255, 255"],
+.dashboard-light [style*="border-top: 1px solid rgba(255, 255, 255"],
+.dashboard-light [style*="border: 1px solid rgba(255, 255, 255"] {
+  border-color: #e2e8f0 !important;
 }
 
 /* ============================================================
