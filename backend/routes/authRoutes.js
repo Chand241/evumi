@@ -193,6 +193,10 @@ router.get('/me', verifyToken, async (req, res) => {
       user: req.user
     });
   } catch (err) {
+    return res.status(500).json({ success: false, message: 'সার্ভার ত্রুটি।' });
+  }
+});
+
 // POST /api/auth/logout
 // Revoke current session token
 router.post('/logout', verifyToken, async (req, res) => {
