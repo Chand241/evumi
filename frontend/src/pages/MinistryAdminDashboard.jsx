@@ -93,6 +93,9 @@ export default function MinistryAdminDashboard() {
   // Seed status
   const [seeding, setSeeding] = useState(false);
   const [actionMessage, setActionMessage] = useState(null);
+  const [creatingUser, setCreatingUser] = useState(false);
+  const [addUserError, setAddUserError] = useState(null);
+  const [successUserPopup, setSuccessUserPopup] = useState(null);
 
   useEffect(() => {
     fetchStats();
@@ -188,16 +191,33 @@ export default function MinistryAdminDashboard() {
   // Create user
   const handleCreateUser = async (e) => {
     e.preventDefault();
+    setAddUserError(null);
+    setCreatingUser(true);
     try {
       const res = await axios.post('/api/admin/users', newUser);
       if (res.data.success) {
-        showFeedback('নতুন ব্যবহারকারী তৈরি হয়েছে!');
         setShowAddUserModal(false);
+        setSuccessUserPopup(res.data.data);
+        setNewUser({
+          name: '',
+          father_name: '',
+          mother_name: '',
+          nid: '',
+          division: 'রাজশাহী',
+          district: 'বগুড়া',
+          upazila: 'শিবগঞ্জ',
+          phone: '',
+          email: '',
+          password: '123456',
+          role: 'User'
+        });
         fetchUsers();
         fetchStats();
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'তৈরি ব্যর্থ হয়েছে');
+      setAddUserError(err.response?.data?.message || err.message || 'ব্যবহারকারী তৈরি ব্যর্থ হয়েছে। অনুগ্রহ করে তথ্য যাচাই করুন।');
+    } finally {
+      setCreatingUser(false);
     }
   };
 
@@ -498,7 +518,7 @@ export default function MinistryAdminDashboard() {
             </div>
 
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={() => setShowAddUserModal(true)} className="btn-primary" style={{ padding: '8px 16px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button onClick={() => { setAddUserError(null); setShowAddUserModal(true); }} className="btn-primary" style={{ padding: '8px 16px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Plus size={14} /> নতুন ইউজার/কর্মকর্তা যোগ করুন
               </button>
             </div>
@@ -651,6 +671,23 @@ export default function MinistryAdminDashboard() {
                 </h3>
 
                 <form onSubmit={handleCreateUser} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {addUserError && (
+                  <div style={{
+                    padding: '11px 16px',
+                    background: '#fef2f2',
+                    border: '1px solid #fecaca',
+                    borderRadius: '8px',
+                    color: '#b91c1c',
+                    fontSize: '13px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    fontWeight: '500'
+                  }}>
+                    <AlertTriangle size={18} color="#dc2626" style={{ flexShrink: 0 }} />
+                    <span>{addUserError}</span>
+                  </div>
+                )}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                     <div>
                       <label style={{ fontSize: '12px', color: '#cbd5e1' }}>নাম *</label>
@@ -729,9 +766,131 @@ export default function MinistryAdminDashboard() {
 
                   <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '10px' }}>
                     <button type="button" onClick={() => setShowAddUserModal(false)} className="btn-secondary" style={{ padding: '8px 16px' }}>বাতিল</button>
-                    <button type="submit" className="btn-primary" style={{ padding: '8px 18px' }}>সংরক্ষণ করুন</button>
+                    <button type="submit" disabled={creatingUser} className="btn-primary" style={{ padding: '8px 20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {creatingUser ? (
+                        <>
+                          <RefreshCw size={14} className="animate-spin" /> যুক্ত করা হচ্ছে...
+                        </>
+                      ) : (
+                        'সংরক্ষণ করুন'
+                      )}
+                    </button>
                   </div>
                 </form>
+              </div>
+            </div>
+          )}
+
+          {/* User Creation Success Pop up Modal */}
+          {successUserPopup && (
+            <div style={{
+              position: 'fixed',
+              top: 0, left: 0, right: 0, bottom: 0,
+              background: 'rgba(15, 23, 42, 0.65)',
+              backdropFilter: 'blur(5px)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              zIndex: 3000, padding: '20px'
+            }}>
+              <div className="glass-card animate-fade-in-up" style={{
+                maxWidth: '500px',
+                width: '100%',
+                padding: '32px 28px',
+                textAlign: 'center',
+                boxShadow: '0 25px 60px rgba(0,0,0,0.22)',
+                border: '1.5px solid #86efac',
+                borderRadius: '20px'
+              }}>
+                <div style={{
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '50%',
+                  background: '#dcfce7',
+                  border: '2px solid #86efac',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px',
+                  boxShadow: '0 6px 20px rgba(34, 197, 94, 0.25)'
+                }}>
+                  <CheckCircle size={36} color="#16a34a" />
+                </div>
+
+                <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', marginBottom: '6px' }}>
+                  ব্যবহারকারী সফলভাবে যুক্ত হয়েছে!
+                </h3>
+                <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '20px' }}>
+                  নতুন ব্যবহারকারীর অ্যাকাউন্ট তৈরি সম্পন্ন হয়েছে এবং সিস্টেমে সক্রিয় করা হয়েছে।
+                </p>
+
+                <div style={{
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '12px',
+                  padding: '16px 18px',
+                  textAlign: 'left',
+                  fontSize: '13px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                  marginBottom: '20px'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '7px' }}>
+                    <span style={{ color: '#64748b' }}>নাম:</span>
+                    <strong style={{ color: '#0f172a' }}>{successUserPopup.name}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '7px' }}>
+                    <span style={{ color: '#64748b' }}>ভূমিকা (Role):</span>
+                    <span style={{
+                      padding: '3px 12px',
+                      borderRadius: '999px',
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      background: successUserPopup.role === 'Super Admin' ? '#fce7f3' : successUserPopup.role === 'Register Office' ? '#dbeafe' : successUserPopup.role === 'AC Land Office' ? '#d1fae5' : '#fef3c7',
+                      color: successUserPopup.role === 'Super Admin' ? '#be185d' : successUserPopup.role === 'Register Office' ? '#1d4ed8' : successUserPopup.role === 'AC Land Office' ? '#047857' : '#92400e',
+                      border: '1px solid rgba(0,0,0,0.08)'
+                    }}>
+                      {successUserPopup.role}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '7px' }}>
+                    <span style={{ color: '#64748b' }}>ইমেইল:</span>
+                    <strong style={{ color: '#0f172a' }}>{successUserPopup.email}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '7px' }}>
+                    <span style={{ color: '#64748b' }}>জাতীয় পরিচয়পত্র (NID):</span>
+                    <strong style={{ color: '#0f172a' }}>{successUserPopup.nid}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '7px' }}>
+                    <span style={{ color: '#64748b' }}>মোবাইল:</span>
+                    <strong style={{ color: '#0f172a' }}>{successUserPopup.phone}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#64748b' }}>এলাকা:</span>
+                    <strong style={{ color: '#0f172a' }}>{successUserPopup.upazila}, {successUserPopup.district}</strong>
+                  </div>
+                </div>
+
+                <div style={{
+                  background: '#f0fdf4',
+                  border: '1px solid #bbf7d0',
+                  borderRadius: '10px',
+                  padding: '11px 14px',
+                  fontSize: '12px',
+                  color: '#15803d',
+                  marginBottom: '22px',
+                  fontWeight: '600'
+                }}>
+                  🔑 ব্যবহারকারী উক্ত ইমেইল ও পাসওয়ার্ড দিয়ে সরাসরি লগইন করতে পারবেন।
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setSuccessUserPopup(null)}
+                  className="btn-primary"
+                  style={{ width: '100%', padding: '12px', fontSize: '15px', fontWeight: '700', borderRadius: '10px' }}
+                >
+                  ঠিক আছে
+                </button>
               </div>
             </div>
           )}

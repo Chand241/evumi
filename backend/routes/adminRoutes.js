@@ -5,9 +5,14 @@ const LandRecord = require('../models/LandRecord');
 const LegalStatus = require('../models/LegalStatus');
 const LandAssignRequest = require('../models/LandAssignRequest');
 const { verifyToken, requireRole } = require('../middleware/auth');
+const { ensureDbConnected } = require('../utils/dbStore');
 
-// Protect all admin routes for Super Admin
+// Protect all admin routes for Super Admin and ensure DB connection
 router.use(verifyToken, requireRole('Super Admin'));
+router.use(async (req, res, next) => {
+  await ensureDbConnected();
+  next();
+});
 
 // 1. GET /api/admin/stats - System high-level statistics
 router.get('/stats', async (req, res) => {
@@ -78,38 +83,82 @@ router.post('/users', async (req, res) => {
       upazila, phone, email, password, role, office_details
     } = req.body;
 
-    const existingEmail = await User.findOne({ email });
-    if (existingEmail) {
-      return res.status(400).json({ success: false, message: 'এই ইমেইল ইতিমধ্যে ব্যবহৃত হচ্ছে।' });
+    if (!name || !name.trim()) {
+      return res.status(400).json({ success: false, message: 'ব্যবহারকারীর পুরো নাম আবশ্যক।' });
+    }
+    if (!nid || !nid.trim()) {
+      return res.status(400).json({ success: false, message: 'জাতীয় পরিচয়পত্র (NID) নম্বর আবশ্যক।' });
+    }
+    if (!email || !email.trim()) {
+      return res.status(400).json({ success: false, message: 'বৈধ ইমেইল ঠিকানা আবশ্যক।' });
+    }
+    if (!phone || !phone.trim()) {
+      return res.status(400).json({ success: false, message: 'ফোন নম্বর আবশ্যক।' });
     }
 
-    const existingNid = await User.findOne({ nid });
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanNid = nid.trim();
+    const cleanPhone = phone.trim();
+
+    // Check virtual super admin email
+    if (cleanEmail === (process.env.SUPER_ADMIN_EMAIL || '').toLowerCase()) {
+      return res.status(400).json({ success: false, message: 'এই ইমেইল মন্ত্রণালয় প্রধান এডমিনের জন্য সংরক্ষিত।' });
+    }
+
+    const existingEmail = await User.findOne({ email: cleanEmail });
+    if (existingEmail) {
+      return res.status(400).json({ success: false, message: 'এই ইমেইল ঠিকানা ইতিমধ্যে ব্যবহৃত হচ্ছে।' });
+    }
+
+    const existingNid = await User.findOne({ nid: cleanNid });
     if (existingNid) {
-      return res.status(400).json({ success: false, message: 'এই এনআইডি ইতিমধ্যে নিবন্ধিত।' });
+      return res.status(400).json({ success: false, message: 'এই জাতীয় পরিচয়পত্র (NID) ইতিমধ্যে নিবন্ধিত রয়েছে।' });
     }
 
     const newUser = new User({
-      name,
-      father_name: father_name || 'পিতা',
-      mother_name: mother_name || 'মাতা',
-      nid,
-      division: division || 'ঢাকা',
-      district: district || 'ঢাকা',
-      upazila: upazila || 'সদর',
-      phone,
-      email,
+      name: name.trim(),
+      father_name: (father_name && father_name.trim()) || 'পিতা',
+      mother_name: (mother_name && mother_name.trim()) || 'মাতা',
+      nid: cleanNid,
+      division: (division && division.trim()) || 'রাজশাহী',
+      district: (district && district.trim()) || 'বগুড়া',
+      upazila: (upazila && upazila.trim()) || 'শিবগঞ্জ',
+      phone: cleanPhone,
+      email: cleanEmail,
       password: password || '123456',
       role: role || 'User',
+      status: 'Active',
       office_details
     });
 
     await newUser.save();
+
+    // Sync to memory store if present
+    try {
+      if (global._memoryUsers) {
+        const uObj = newUser.toObject();
+        delete uObj.password;
+        global._memoryUsers = global._memoryUsers.filter(u => u.email !== cleanEmail && u.nid !== cleanNid);
+        global._memoryUsers.push(uObj);
+      }
+    } catch (e) {}
+
     const userObj = newUser.toObject();
     delete userObj.password;
 
-    return res.status(201).json({ success: true, message: 'ব্যবহারকারী সফলভাবে যুক্ত হয়েছে!', data: userObj });
+    return res.status(201).json({
+      success: true,
+      message: 'ব্যবহারকারী সফলভাবে যুক্ত হয়েছে!',
+      data: userObj
+    });
   } catch (err) {
-    return res.status(500).json({ success: false, message: 'তৈরি ব্যর্থ হয়েছে।', error: err.message });
+    console.error('Admin create user error:', err);
+    if (err.code === 11000) {
+      const field = Object.keys(err.keyPattern || {})[0];
+      const fieldName = field === 'email' ? 'ইমেইল' : field === 'nid' ? 'NID' : 'তথ্য';
+      return res.status(400).json({ success: false, message: `এই ${fieldName} ইতিমধ্যে ডাটাবেজে রয়েছে।` });
+    }
+    return res.status(500).json({ success: false, message: 'তৈরি ব্যর্থ হয়েছে: ' + (err.message || 'সার্ভার সমস্যা') });
   }
 });
 
