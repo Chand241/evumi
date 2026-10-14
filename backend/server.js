@@ -51,7 +51,6 @@ app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api', require('./routes/p3Routes'));
 app.use('/api', require('./routes/p4Routes'));
 app.use('/api', require('./routes/p5Routes'));
-app.use('/api/gis', require('./routes/gisRoutes'));
 app.use('/api', require('./routes/seedRoutes'));
 
 // Health check & Production Status

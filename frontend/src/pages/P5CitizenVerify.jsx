@@ -156,15 +156,24 @@ export default function P5CitizenVerify() {
       const res = await axios.get('/api/verify-land', { params });
       setResult(res.data);
     } catch (err) {
+      let message = 'সার্ভার সংযোগে সমস্যা হয়েছে। অনুগ্রহ করে কিছুক্ষণ পর পুনরায় চেষ্টা করুন।';
+      if (err.response) {
+        // Server responded with error status
+        message = err.response?.data?.message || `সার্ভার সমস্যা (${err.response.status})। অনুগ্রহ করে পুনরায় চেষ্টা করুন।`;
+      } else if (err.request) {
+        // Request made but no response (network issue / backend offline)
+        message = '⚠️ সার্ভারের সাথে সংযোগ করা যাচ্ছে না। ইন্টারনেট সংযোগ পরীক্ষা করুন অথবা কিছুক্ষণ পর আবার চেষ্টা করুন।';
+      }
       setResult({
         success: false,
         signal: 'unknown',
-        message: err.response?.data?.message || 'সার্ভার সমস্যা। অনুগ্রহ করে পুনরায় চেষ্টা করুন।'
+        message
       });
     } finally {
       setLoading(false);
     }
   };
+
 
   const handleSearch = (e) => {
     e.preventDefault();
