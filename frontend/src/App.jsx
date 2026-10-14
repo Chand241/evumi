@@ -13,6 +13,7 @@ const P3FraudDetection = lazy(() => import('./pages/P3FraudDetection'));
 const P4RegistryPanel = lazy(() => import('./pages/P4RegistryPanel'));
 const P4AcLandPanel = lazy(() => import('./pages/P4AcLandPanel'));
 const P5CitizenVerify = lazy(() => import('./pages/P5CitizenVerify'));
+const GisMouzaMap = lazy(() => import('./pages/GisMouzaMap'));
 const PaymentPage = lazy(() => import('./pages/PaymentPage'));
 const QRVerifyPage = lazy(() => import('./pages/QRVerifyPage'));
 
@@ -65,6 +66,7 @@ function App() {
             <Routes>
               {/* Public Pages */}
               <Route path="/" element={<LandingPage />} />
+              <Route path="/map" element={<GisMouzaMap />} />
               <Route path="/verify" element={<P5CitizenVerify />} />
               <Route path="/payment/:record_id" element={<PaymentPage />} />
               <Route path="/qr-verify/:qr_code_id" element={<QRVerifyPage />} />

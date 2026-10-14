@@ -47,10 +47,11 @@ app.use('/api/user', require('./routes/userRoutes'));
 app.use('/api/assign', require('./routes/assignRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 
-// Land Management Modules (P3, P4, P5, Seed)
+// Land Management Modules (P3, P4, P5, GIS, Seed)
 app.use('/api', require('./routes/p3Routes'));
 app.use('/api', require('./routes/p4Routes'));
 app.use('/api', require('./routes/p5Routes'));
+app.use('/api/gis', require('./routes/gisRoutes'));
 app.use('/api', require('./routes/seedRoutes'));
 
 // Health check & Production Status

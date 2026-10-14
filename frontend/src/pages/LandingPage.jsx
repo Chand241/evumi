@@ -309,6 +309,22 @@ export default function LandingPage() {
             >
               <Search size={18} /> জমি যাচাই (P5)
             </button>
+
+            <button onClick={() => navigate('/map')} style={{
+              display: 'inline-flex', alignItems: 'center', gap: '9px',
+              padding: '15px 28px', borderRadius: '12px',
+              border: '1.5px solid #a7f3d0',
+              background: '#ecfdf5',
+              color: '#047857', fontSize: '16px', fontWeight: '700',
+              cursor: 'pointer', boxShadow: '0 4px 16px rgba(4,120,87,0.1)',
+              transition: 'all 0.25s ease',
+              fontFamily: "'Inter','Hind Siliguri',sans-serif",
+            }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#d1fae5'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = '#ecfdf5'; e.currentTarget.style.transform = 'translateY(0)'; }}
+            >
+              <MapPin size={18} /> মৌজা ম্যাপ (GIS)
+            </button>
           </div>
 
           {/* Trust Badges */}
