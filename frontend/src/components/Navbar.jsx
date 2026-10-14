@@ -1,6 +1,6 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Search, Home, LogIn, LogOut, UserPlus, LayoutDashboard, MapPin } from 'lucide-react';
+import { Search, Home, LogIn, LogOut, UserPlus, LayoutDashboard } from 'lucide-react';
 
 export default function Navbar() {
   const location = useLocation();
@@ -86,14 +86,6 @@ export default function Navbar() {
             style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
           >
             <Home size={14} /> <span className="hide-on-mobile">হোম</span>
-          </NavLink>
-
-          <NavLink
-            to="/map"
-            className={location.pathname === '/map' ? 'nav-link active' : 'nav-link'}
-            style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
-          >
-            <MapPin size={14} /> <span>মৌজা ম্যাপ</span>
           </NavLink>
 
           <NavLink
