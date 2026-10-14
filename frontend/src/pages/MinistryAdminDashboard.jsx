@@ -398,7 +398,7 @@ export default function MinistryAdminDashboard() {
           { id: 'overview', label: '📊 সিস্টেম ওভারভিউ', icon: Shield },
           { id: 'users', label: `👥 ইউজার ম্যানেজমেন্ট ও রোল পরিবর্তন (${users.length})`, icon: Users },
           { id: 'lands', label: `🗺️ ভূমি ডাটা ও আইনি স্ট্যাটাস (${lands.length})`, icon: Layers },
-          { id: 'controls', label: '⚙️ পূর্ণ সিস্টেম কন্ট্রোল ও রিসেট', icon: Database }
+          { id: 'controls', label: '🔑 ৪টি রোলের ক্রেডেনশিয়াল রেফারেন্স', icon: Key }
         ].map(tab => (
           <button
             key={tab.id}
@@ -1005,34 +1005,9 @@ export default function MinistryAdminDashboard() {
         </div>
       )}
 
-      {/* TAB 4: System Control & Seed */}
+      {/* TAB 4: System Role Credentials Reference */}
       {activeTab === 'controls' && (
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <div className="glass-card" style={{ padding: '32px', marginBottom: '24px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#f8fafc', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Database size={20} color="#f472b6" /> ডেমো ডেটাবেজ রিসেট ও পুনর্নির্মাণ
-            </h3>
-            <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: 1.6, marginBottom: '20px' }}>
-              হ্যাকার্থন বা মূল্যায়নের জন্য যেকোনো সময় ডেটাবেজকে মূল অবস্থায় ফিরিয়ে নিন। এটি ৪টি প্রাথমিক ভূমিকা ইউজার (Admin, Register Office, AC Land, Citizen) এবং সকল ডেমো জমি ও আইনি নোটিশ নতুন করে তৈরি করবে।
-            </p>
-
-            <button
-              onClick={handleSeedDatabase}
-              disabled={seeding}
-              className="btn-primary"
-              style={{
-                padding: '12px 24px',
-                fontSize: '14px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: 'linear-gradient(135deg, #be185d, #ec4899)'
-              }}
-            >
-              <RefreshCw size={16} className={seeding ? 'animate-spin' : ''} />
-              {seeding ? 'রিসেট হচ্ছে...' : 'সব ডেটা রিসেট ও ৪টি রোলের ডেমো তৈরি করুন'}
-            </button>
-          </div>
 
           <div className="glass-card" style={{ padding: '28px' }}>
             <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#f1f5f9', marginBottom: '14px' }}>
