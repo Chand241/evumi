@@ -35,152 +35,153 @@ export default function UserDashboard() {
   };
 
   return (
-    <div className="dashboard-dark" style={{ paddingTop: '1px', paddingBottom: '40px' }}>
-    <div style={{ maxWidth: '1280px', margin: '30px auto', padding: '0 24px' }}>
-      {/* Top Banner */}
-      <div className="glass-card" style={{
-        padding: '24px 30px',
-        marginBottom: '28px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '20px',
-        borderLeft: '4px solid #22c55e'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
-          <div style={{
-            width: '56px',
-            height: '56px',
-            borderRadius: '16px',
-            background: 'linear-gradient(135deg, #166534, #22c55e)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            fontSize: '24px'
-          }}>
-            👤
-          </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#f8fafc', margin: 0 }}>
-                {user?.name}
-              </h1>
-              <span style={{
-                fontSize: '11px',
-                padding: '3px 10px',
-                borderRadius: '999px',
-                background: 'rgba(34, 197, 94, 0.15)',
-                color: '#86efac',
-                border: '1px solid rgba(34, 197, 94, 0.3)',
-                fontWeight: '700'
+    <div className="dashboard-dark" style={{ paddingTop: '20px', paddingBottom: '60px' }}>
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 20px' }}>
+        <div className="dashboard-layout">
+          {/* Left Sidebar */}
+          <aside className="dashboard-sidebar">
+            {/* User Profile Summary */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              paddingBottom: '16px',
+              borderBottom: '1px solid #e2e8f0'
+            }}>
+              <div style={{
+                width: '46px',
+                height: '46px',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #166534, #22c55e)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: '22px',
+                flexShrink: 0,
+                boxShadow: '0 4px 12px rgba(22, 163, 74, 0.2)'
               }}>
-                নাগরিক (Citizen User)
-              </span>
+                👤
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {user?.name || 'নাগরিক ব্যবহারকারী'}
+                </div>
+                <div style={{ display: 'inline-block', fontSize: '11px', padding: '1px 8px', borderRadius: '999px', background: '#fef3c7', color: '#92400e', fontWeight: '700', marginTop: '2px' }}>
+                  নাগরিক পোর্টাল
+                </div>
+              </div>
             </div>
-            <p style={{ color: '#94a3b8', fontSize: '13px', margin: '4px 0 0 0' }}>
-              জাতীয় পরিচয়পত্র: <strong style={{ color: '#cbd5e1' }}>{user?.nid}</strong> | ঠিকানা: {user?.upazila}, {user?.district}
-            </p>
-          </div>
-        </div>
 
-        {/* Quick stat */}
-        <div style={{ display: 'flex', gap: '14px' }}>
-          <div style={{
-            background: 'rgba(255,255,255,0.03)',
-            padding: '10px 18px',
-            borderRadius: '10px',
-            border: '1px solid rgba(255,255,255,0.06)',
-            textAlign: 'center'
-          }}>
-            <div style={{ fontSize: '20px', fontWeight: '800', color: '#22c55e' }}>
-              {landData.active_lands.length}
+            {/* Sidebar Navigation */}
+            <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '4px 8px 6px' }}>
+                মেনু ও সেকশন
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveTab('lands')}
+                className={`sidebar-nav-item ${activeTab === 'lands' ? 'active' : ''}`}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <FileText size={18} color={activeTab === 'lands' ? '#15803d' : '#64748b'} />
+                  <span>আমার অনুমোদিত জমি</span>
+                </div>
+                <span style={{
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  padding: '2px 8px',
+                  borderRadius: '999px',
+                  background: activeTab === 'lands' ? '#bbf7d0' : '#f1f5f9',
+                  color: activeTab === 'lands' ? '#14532d' : '#475569'
+                }}>
+                  {landData.active_lands.length}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('profile')}
+                className={`sidebar-nav-item ${activeTab === 'profile' ? 'active' : ''}`}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <User size={18} color={activeTab === 'profile' ? '#15803d' : '#64748b'} />
+                  <span>নাগরিক প্রোফাইল</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('verify')}
+                className={`sidebar-nav-item ${activeTab === 'verify' ? 'active' : ''}`}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Search size={18} color={activeTab === 'verify' ? '#15803d' : '#64748b'} />
+                  <span>P5 নাগরিক জমি যাচাই</span>
+                </div>
+              </button>
+            </nav>
+
+            {/* Sidebar Quick Stats Widget */}
+            <div style={{
+              marginTop: 'auto',
+              paddingTop: '16px',
+              borderTop: '1px solid #e2e8f0',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px'
+            }}>
+              <div style={{ background: '#f8fafc', padding: '12px 14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '600' }}>জাতীয় পরিচয়পত্র (NID)</div>
+                <div style={{ fontSize: '13px', fontWeight: '800', color: '#0f172a', fontFamily: 'monospace', marginTop: '2px' }}>
+                  {user?.nid || '—'}
+                </div>
+                <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                  ঠিকানা: {user?.upazila}, {user?.district}
+                </div>
+              </div>
+
+              <div style={{ background: '#f0fdf4', padding: '10px 14px', borderRadius: '8px', border: '1px solid #bbf7d0', fontSize: '11px', color: '#15803d', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Shield size={14} color="#16a34a" />
+                <span>ভূমি সেবা হেল্পলাইন: <strong>১৬১২২</strong></span>
+              </div>
             </div>
-            <div style={{ fontSize: '11px', color: '#94a3b8' }}>অনুমোদিত জমি</div>
-          </div>
-          <div style={{
-            background: 'rgba(255,255,255,0.03)',
-            padding: '10px 18px',
-            borderRadius: '10px',
-            border: '1px solid rgba(255,255,255,0.06)',
-            textAlign: 'center'
-          }}>
-            <div style={{ fontSize: '20px', fontWeight: '800', color: '#f59e0b' }}>
-              {landData.pending_assignments.length}
+          </aside>
+
+          {/* Main Content Area */}
+          <main className="dashboard-main">
+            {/* Top Stat Banner (Compact) */}
+            <div className="glass-card" style={{
+              padding: '18px 24px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '16px',
+              borderLeft: '4px solid #22c55e'
+            }}>
+              <div>
+                <h1 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
+                  {activeTab === 'lands' ? 'আমার অনুমোদিত জমির রেকর্ড' : activeTab === 'profile' ? 'নাগরিক প্রোফাইল তথ্য' : 'P5 উন্মুক্ত জমি যাচাইকরণ'}
+                </h1>
+                <p style={{ color: '#64748b', fontSize: '12px', margin: '3px 0 0' }}>
+                  নাগরিক ড্যাশবোর্ড · ডিজিটাল ভূমি ব্যবস্থাপনা ও মালিকানা ট্র্যাকিং
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <div style={{ background: '#f8fafc', padding: '8px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+                  <div style={{ fontSize: '16px', fontWeight: '800', color: '#16a34a' }}>{landData.active_lands.length}</div>
+                  <div style={{ fontSize: '10px', color: '#64748b' }}>অনুমোদিত জমি</div>
+                </div>
+                <div style={{ background: '#f8fafc', padding: '8px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+                  <div style={{ fontSize: '16px', fontWeight: '800', color: '#f59e0b' }}>{landData.pending_assignments.length}</div>
+                  <div style={{ fontSize: '10px', color: '#64748b' }}>পর্যালোচনাধীন</div>
+                </div>
+              </div>
             </div>
-            <div style={{ fontSize: '11px', color: '#94a3b8' }}>পর্যালোচনাধীন</div>
-          </div>
-        </div>
-      </div>
 
-      {/* Tabs */}
-      <div style={{
-        display: 'flex',
-        gap: '10px',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
-        marginBottom: '24px',
-        paddingBottom: '4px'
-      }}>
-        <button
-          onClick={() => setActiveTab('lands')}
-          style={{
-            padding: '10px 20px',
-            borderRadius: '8px',
-            background: activeTab === 'lands' ? 'rgba(34, 197, 94, 0.15)' : 'transparent',
-            border: activeTab === 'lands' ? '1px solid rgba(34, 197, 94, 0.4)' : '1px solid transparent',
-            color: activeTab === 'lands' ? '#86efac' : '#94a3b8',
-            fontWeight: '600',
-            fontSize: '14px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}
-        >
-          <FileText size={16} /> আমার অনুমোদিত জমি ({landData.active_lands.length})
-        </button>
-
-        <button
-          onClick={() => setActiveTab('profile')}
-          style={{
-            padding: '10px 20px',
-            borderRadius: '8px',
-            background: activeTab === 'profile' ? 'rgba(34, 197, 94, 0.15)' : 'transparent',
-            border: activeTab === 'profile' ? '1px solid rgba(34, 197, 94, 0.4)' : '1px solid transparent',
-            color: activeTab === 'profile' ? '#86efac' : '#94a3b8',
-            fontWeight: '600',
-            fontSize: '14px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}
-        >
-          <User size={16} /> নাগরিক প্রোফাইল (Read-only)
-        </button>
-
-        <button
-          onClick={() => setActiveTab('verify')}
-          style={{
-            padding: '10px 20px',
-            borderRadius: '8px',
-            background: activeTab === 'verify' ? 'rgba(34, 197, 94, 0.15)' : 'transparent',
-            border: activeTab === 'verify' ? '1px solid rgba(34, 197, 94, 0.4)' : '1px solid transparent',
-            color: activeTab === 'verify' ? '#86efac' : '#94a3b8',
-            fontWeight: '600',
-            fontSize: '14px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}
-        >
-          <Search size={16} /> P5 নাগরিক জমি যাচাই
-        </button>
-      </div>
-
-      {/* TAB 1: Assigned Lands */}
+{/* TAB 1: Assigned Lands */}
       {activeTab === 'lands' && (
         <div>
           {/* Pending assignments notice */}
@@ -418,7 +419,9 @@ export default function UserDashboard() {
           <P5CitizenVerify />
         </div>
       )}
-    </div>
+          </main>
+        </div>
+      </div>
     </div>
   );
 }

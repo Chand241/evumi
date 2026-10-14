@@ -337,112 +337,181 @@ export default function MinistryAdminDashboard() {
   };
 
   return (
-    <div className="dashboard-dark" style={{ paddingTop: '1px', paddingBottom: '40px' }}>
-    <div style={{ maxWidth: '1400px', margin: '30px auto', padding: '0 24px' }}>
-      {/* Top Banner */}
-      <div className="glass-card" style={{
-        padding: '24px 30px',
-        marginBottom: '26px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '20px',
-        borderLeft: '4px solid #ec4899'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
-          <div style={{
-            width: '56px',
-            height: '56px',
-            borderRadius: '16px',
-            background: 'linear-gradient(135deg, #be185d, #ec4899)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white'
-          }}>
-            <Shield size={28} />
-          </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#f8fafc', margin: 0 }}>
-                ভূমি মন্ত্রণালয় - কেন্দ্রীয় প্রশাসন (Super Admin)
-              </h1>
-              <span style={{
-                fontSize: '11px',
-                padding: '3px 10px',
-                borderRadius: '999px',
-                background: 'rgba(236, 72, 153, 0.15)',
-                color: '#f472b6',
-                border: '1px solid rgba(236, 72, 153, 0.3)',
-                fontWeight: '700'
-              }}>
-                Super Admin Role
-              </span>
-            </div>
-            <p style={{ color: '#94a3b8', fontSize: '13px', margin: '4px 0 0 0' }}>
-              প্রশাসক: <strong style={{ color: '#cbd5e1' }}>{user?.name}</strong> | ইমেইল: <span style={{ fontFamily: 'monospace', color: '#f472b6' }}>{user?.email}</span>
-            </p>
-          </div>
-        </div>
-
-        {/* Global Feedback Banner */}
-        {actionMessage && (
-          <div style={{
-            padding: '8px 16px',
-            background: 'rgba(34, 197, 94, 0.2)',
-            border: '1px solid rgba(34, 197, 94, 0.4)',
-            borderRadius: '8px',
-            color: '#86efac',
-            fontSize: '13px',
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
-            <Check size={16} /> {actionMessage}
-          </div>
-        )}
-      </div>
-
-      {/* Navigation Tabs */}
-      <div style={{
-        display: 'flex',
-        gap: '10px',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
-        marginBottom: '24px',
-        paddingBottom: '4px',
-        flexWrap: 'wrap'
-      }}>
-        {[
-          { id: 'overview', label: '📊 সিস্টেম ওভারভিউ', icon: Shield },
-          { id: 'users', label: `👥 ইউজার ম্যানেজমেন্ট ও রোল পরিবর্তন (${users.length})`, icon: Users },
-          { id: 'lands', label: `🗺️ ভূমি ডাটা ও আইনি স্ট্যাটাস (${lands.length})`, icon: Layers },
-          { id: 'controls', label: '🔑 ৪টি রোলের ক্রেডেনশিয়াল রেফারেন্স', icon: Key }
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            style={{
-              padding: '10px 18px',
-              borderRadius: '8px',
-              background: activeTab === tab.id ? 'rgba(236, 72, 153, 0.15)' : 'transparent',
-              border: activeTab === tab.id ? '1px solid rgba(236, 72, 153, 0.4)' : '1px solid transparent',
-              color: activeTab === tab.id ? '#f472b6' : '#94a3b8',
-              fontWeight: '700',
-              fontSize: '13px',
-              cursor: 'pointer',
+    <div className="dashboard-dark" style={{ paddingTop: '20px', paddingBottom: '60px' }}>
+      <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 20px' }}>
+        <div className="dashboard-layout">
+          {/* Left Sidebar */}
+          <aside className="dashboard-sidebar">
+            {/* Admin Profile Summary */}
+            <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '6px'
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+              gap: '12px',
+              paddingBottom: '16px',
+              borderBottom: '1px solid #e2e8f0'
+            }}>
+              <div style={{
+                width: '46px',
+                height: '46px',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #be185d, #ec4899)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: '22px',
+                flexShrink: 0,
+                boxShadow: '0 4px 12px rgba(236, 72, 153, 0.2)'
+              }}>
+                <Shield size={24} />
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {user?.name || 'মন্ত্রণালয় এডমিন'}
+                </div>
+                <div style={{ display: 'inline-block', fontSize: '11px', padding: '1px 8px', borderRadius: '999px', background: '#fce7f3', color: '#be185d', fontWeight: '700', marginTop: '2px' }}>
+                  Super Admin
+                </div>
+              </div>
+            </div>
 
-      {/* TAB 1: System Overview */}
+            {/* Sidebar Navigation */}
+            <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '4px 8px 6px' }}>
+                ড্যাশবোর্ড মেনু
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('overview')}
+                className={`sidebar-nav-item ${activeTab === 'overview' ? 'active-purple' : ''}`}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Shield size={18} color={activeTab === 'overview' ? '#7e22ce' : '#64748b'} />
+                  <span>সিস্টেম ওভারভিউ</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('users')}
+                className={`sidebar-nav-item ${activeTab === 'users' ? 'active-purple' : ''}`}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Users size={18} color={activeTab === 'users' ? '#7e22ce' : '#64748b'} />
+                  <span>ইউজার ও রোল</span>
+                </div>
+                <span style={{
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  padding: '2px 8px',
+                  borderRadius: '999px',
+                  background: activeTab === 'users' ? '#e9d5ff' : '#f1f5f9',
+                  color: activeTab === 'users' ? '#581c87' : '#475569'
+                }}>
+                  {users.length}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('lands')}
+                className={`sidebar-nav-item ${activeTab === 'lands' ? 'active-purple' : ''}`}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Layers size={18} color={activeTab === 'lands' ? '#7e22ce' : '#64748b'} />
+                  <span>ভূমি ডাটা ও রেকর্ড</span>
+                </div>
+                <span style={{
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  padding: '2px 8px',
+                  borderRadius: '999px',
+                  background: activeTab === 'lands' ? '#e9d5ff' : '#f1f5f9',
+                  color: activeTab === 'lands' ? '#581c87' : '#475569'
+                }}>
+                  {lands.length}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('controls')}
+                className={`sidebar-nav-item ${activeTab === 'controls' ? 'active-purple' : ''}`}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Key size={18} color={activeTab === 'controls' ? '#7e22ce' : '#64748b'} />
+                  <span>৪টি রোলের ক্রেডেনশিয়াল</span>
+                </div>
+              </button>
+            </nav>
+
+            {/* Sidebar Security & Stats Widget */}
+            <div style={{
+              marginTop: 'auto',
+              paddingTop: '16px',
+              borderTop: '1px solid #e2e8f0',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px'
+            }}>
+              <div style={{ background: '#f8fafc', padding: '12px 14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '600' }}>প্রশাসনিক অ্যাকাউন্ট</div>
+                <div style={{ fontSize: '12px', fontWeight: '700', color: '#0f172a', fontFamily: 'monospace', marginTop: '2px' }}>
+                  {user?.email || 'admin@gmail.com'}
+                </div>
+                <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                  পদবি: কেন্দ্রীয় সিস্টেম অ্যাডমিনিস্ট্রেটর
+                </div>
+              </div>
+
+              <div style={{ background: '#f0fdf4', padding: '10px 14px', borderRadius: '8px', border: '1px solid #bbf7d0', fontSize: '11px', color: '#15803d', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <CheckCircle size={14} color="#16a34a" />
+                <span>সিস্টেম লাইভ ও রিয়েলটাইম সিঙ্কড</span>
+              </div>
+            </div>
+          </aside>
+
+          {/* Main Content Area */}
+          <main className="dashboard-main">
+            {/* Top Stat Banner (Compact) */}
+            <div className="glass-card" style={{
+              padding: '18px 24px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '16px',
+              borderLeft: '4px solid #ec4899'
+            }}>
+              <div>
+                <h1 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
+                  {activeTab === 'overview' ? 'কেন্দ্রীয় ভূমি প্রশাসন ওভারভিউ' : activeTab === 'users' ? 'ব্যবহারকারী ব্যবস্থাপনা ও ভূমিকা পরিবর্তন' : activeTab === 'lands' ? 'ভূমি ডাটা ও আইনি স্ট্যাটাস মনিটরিং' : 'সিস্টেম রোল ও স্থায়ী ক্রেডেনশিয়াল'}
+                </h1>
+                <p style={{ color: '#64748b', fontSize: '12px', margin: '3px 0 0' }}>
+                  ভূমি মন্ত্রণালয় - কেন্দ্রীয় প্রশাসন (Super Admin Portal)
+                </p>
+              </div>
+
+              {actionMessage && (
+                <div style={{
+                  padding: '7px 14px',
+                  background: '#dcfce7',
+                  border: '1px solid #86efac',
+                  borderRadius: '8px',
+                  color: '#15803d',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}>
+                  <Check size={14} /> {actionMessage}
+                </div>
+              )}
+            </div>
+
+{/* TAB 1: System Overview */}
       {activeTab === 'overview' && stats && (
         <div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '28px' }}>
@@ -1169,27 +1238,29 @@ export default function MinistryAdminDashboard() {
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
 
           <div className="glass-card" style={{ padding: '28px' }}>
-            <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#f1f5f9', marginBottom: '14px' }}>
+            <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#0f172a', marginBottom: '14px' }}>
               🔑 ৪টি রোলের স্থায়ী ক্রেডেনশিয়াল রেফারেন্স
             </h4>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px', fontSize: '13px' }}>
-              <div style={{ background: 'rgba(236,72,153,0.1)', padding: '10px 14px', borderRadius: '8px', border: '1px solid rgba(236,72,153,0.3)', color: '#fbcfe8' }}>
+              <div style={{ background: '#fdf2f8', padding: '12px 14px', borderRadius: '8px', border: '1px solid #fbcfe8', color: '#9d174d' }}>
                 👑 <strong>Super Admin:</strong> admin@gmail.com | পাসওয়ার্ড: 123456
               </div>
-              <div style={{ background: 'rgba(59,130,246,0.1)', padding: '10px 14px', borderRadius: '8px', border: '1px solid rgba(59,130,246,0.3)', color: '#bfdbfe' }}>
+              <div style={{ background: '#eff6ff', padding: '12px 14px', borderRadius: '8px', border: '1px solid #bfdbfe', color: '#1e40af' }}>
                 🏛️ <strong>Register Office:</strong> registry@evhumi.gov.bd | পাসওয়ার্ড: 123456
               </div>
-              <div style={{ background: 'rgba(16,185,129,0.1)', padding: '10px 14px', borderRadius: '8px', border: '1px solid rgba(16,185,129,0.3)', color: '#a7f3d0' }}>
+              <div style={{ background: '#ecfdf5', padding: '12px 14px', borderRadius: '8px', border: '1px solid #a7f3d0', color: '#065f46' }}>
                 ⚖️ <strong>AC Land Office:</strong> acland@evhumi.gov.bd | পাসওয়ার্ড: 123456
               </div>
-              <div style={{ background: 'rgba(245,158,11,0.1)', padding: '10px 14px', borderRadius: '8px', border: '1px solid rgba(245,158,11,0.3)', color: '#fde68a' }}>
+              <div style={{ background: '#fffbeb', padding: '12px 14px', borderRadius: '8px', border: '1px solid #fde68a', color: '#92400e' }}>
                 👤 <strong>Citizen User:</strong> citizen@example.com | পাসওয়ার্ড: 123456 (NID: 1998567890123)
               </div>
             </div>
           </div>
         </div>
       )}
-    </div>
+          </main>
+        </div>
+      </div>
     </div>
   );
 }

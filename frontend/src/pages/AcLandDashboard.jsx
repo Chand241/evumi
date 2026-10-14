@@ -69,97 +69,141 @@ export default function AcLandDashboard() {
   };
 
   return (
-    <div className="dashboard-dark" style={{ paddingTop: '1px', paddingBottom: '40px' }}>
-    <div style={{ maxWidth: '1360px', margin: '30px auto', padding: '0 24px' }}>
-      {/* Header Banner */}
-      <div className="glass-card" style={{
-        padding: '24px 30px',
-        marginBottom: '26px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '20px',
-        borderLeft: '4px solid #10b981'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
-          <div style={{
-            width: '56px',
-            height: '56px',
-            borderRadius: '16px',
-            background: 'linear-gradient(135deg, #059669, #10b981)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white'
-          }}>
-            <Users size={28} />
-          </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#f8fafc', margin: 0 }}>
-                সহকারী কমিশনার (ভূমি) - এসি ল্যান্ড অফিস
-              </h1>
-              <span style={{
-                fontSize: '11px',
-                padding: '3px 10px',
-                borderRadius: '999px',
-                background: 'rgba(16, 185, 129, 0.15)',
-                color: '#6ee7b7',
-                border: '1px solid rgba(16, 185, 129, 0.3)',
-                fontWeight: '700'
+    <div className="dashboard-dark" style={{ paddingTop: '20px', paddingBottom: '60px' }}>
+      <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 20px' }}>
+        <div className="dashboard-layout">
+          {/* Left Sidebar */}
+          <aside className="dashboard-sidebar">
+            {/* Officer Profile Summary */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              paddingBottom: '16px',
+              borderBottom: '1px solid #e2e8f0'
+            }}>
+              <div style={{
+                width: '46px',
+                height: '46px',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #059669, #10b981)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: '22px',
+                flexShrink: 0,
+                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)'
               }}>
-                AC Land Office Role
-              </span>
+                <Users size={24} />
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {user?.name || 'এসি ল্যান্ড'}
+                </div>
+                <div style={{ display: 'inline-block', fontSize: '11px', padding: '1px 8px', borderRadius: '999px', background: '#ecfdf5', color: '#047857', fontWeight: '700', marginTop: '2px' }}>
+                  এসি ল্যান্ড অফিস
+                </div>
+              </div>
             </div>
-            <p style={{ color: '#94a3b8', fontSize: '13px', margin: '4px 0 0 0' }}>
-              কর্মকর্তা: <strong style={{ color: '#cbd5e1' }}>{user?.name}</strong> | {user?.office_details?.office_name || 'ধানমন্ডি রাজস্ব সার্কেল'}
-            </p>
-          </div>
-        </div>
 
-        {/* Tab Buttons */}
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button
-            onClick={() => setActiveTab('assign_requests')}
-            style={{
-              padding: '10px 18px',
-              borderRadius: '8px',
-              background: activeTab === 'assign_requests' ? '#10b981' : 'rgba(255,255,255,0.05)',
-              color: 'white',
-              fontWeight: '700',
-              fontSize: '13px',
-              border: 'none',
-              cursor: 'pointer',
+            {/* Sidebar Navigation */}
+            <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '4px 8px 6px' }}>
+                ড্যাশবোর্ড মেনু
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveTab('assign_requests')}
+                className={`sidebar-nav-item ${activeTab === 'assign_requests' ? 'active-emerald' : ''}`}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Layers size={18} color={activeTab === 'assign_requests' ? '#047857' : '#64748b'} />
+                  <span>জমি বরাদ্দ অনুমোদন</span>
+                </div>
+                <span style={{
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  padding: '2px 8px',
+                  borderRadius: '999px',
+                  background: activeTab === 'assign_requests' ? '#a7f3d0' : '#f1f5f9',
+                  color: activeTab === 'assign_requests' ? '#065f46' : '#475569'
+                }}>
+                  {requests.length}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('mutations')}
+                className={`sidebar-nav-item ${activeTab === 'mutations' ? 'active-emerald' : ''}`}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <FileText size={18} color={activeTab === 'mutations' ? '#047857' : '#64748b'} />
+                  <span>ই-নামজারি ও মিউটেশন</span>
+                </div>
+              </button>
+            </nav>
+
+            {/* Sidebar Officer & Security Widget */}
+            <div style={{
+              marginTop: 'auto',
+              paddingTop: '16px',
+              borderTop: '1px solid #e2e8f0',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px'
+            }}>
+              <div style={{ background: '#f8fafc', padding: '12px 14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '600' }}>রাজস্ব সার্কেল</div>
+                <div style={{ fontSize: '12px', fontWeight: '700', color: '#0f172a', marginTop: '2px' }}>
+                  {user?.office_details?.office_name || 'ধানমন্ডি রাজস্ব সার্কেল'}
+                </div>
+                <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                  পদবি: {user?.office_details?.designation || 'সহকারী কমিশনার (ভূমি)'}
+                </div>
+              </div>
+
+              <div style={{ background: '#ecfdf5', padding: '10px 14px', borderRadius: '8px', border: '1px solid #a7f3d0', fontSize: '11px', color: '#047857', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <ShieldCheck size={14} color="#059669" />
+                <span>QR খতিয়ান ও অটো-মিউটেশন সক্রিয়</span>
+              </div>
+            </div>
+          </aside>
+
+          {/* Main Content Area */}
+          <main className="dashboard-main">
+            {/* Top Stat Banner (Compact) */}
+            <div className="glass-card" style={{
+              padding: '18px 24px',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px'
-            }}
-          >
-            <Layers size={16} /> জমি বরাদ্দ অনুমোদন ইনবক্স ({requests.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('mutations')}
-            style={{
-              padding: '10px 18px',
-              borderRadius: '8px',
-              background: activeTab === 'mutations' ? '#10b981' : 'rgba(255,255,255,0.05)',
-              color: 'white',
-              fontWeight: '700',
-              fontSize: '13px',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-          >
-            <FileText size={16} /> ই-নামজারি ও মিউটেশন ইনবক্স
-          </button>
-        </div>
-      </div>
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '16px',
+              borderLeft: '4px solid #10b981'
+            }}>
+              <div>
+                <h1 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
+                  {activeTab === 'assign_requests' ? 'সাব-রেজিস্ট্রি থেকে প্রেরিত জমি বরাদ্দ ইনবক্স' : 'ই-নামজারি ও QR-কোডযুক্ত খতিয়ান প্রদান'}
+                </h1>
+                <p style={{ color: '#64748b', fontSize: '12px', margin: '3px 0 0' }}>
+                  সহকারী কমিশনার (ভূমি) অফিস · {user?.office_details?.office_name || 'রাজস্ব সার্কেল'}
+                </p>
+              </div>
 
-      {activeTab === 'assign_requests' && (
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <button
+                  onClick={fetchRequests}
+                  className="btn-secondary"
+                  style={{ padding: '7px 14px', fontSize: '12px' }}
+                >
+                  ইনবক্স রিফ্রেশ
+                </button>
+              </div>
+            </div>
+
+{activeTab === 'assign_requests' && (
         <div>
           {/* Filter Bar */}
           <div style={{
@@ -437,7 +481,9 @@ export default function AcLandDashboard() {
           <P4AcLandPanel />
         </div>
       )}
-    </div>
+          </main>
+        </div>
+      </div>
     </div>
   );
 }

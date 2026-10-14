@@ -268,97 +268,131 @@ export default function RegisterOfficeDashboard() {
   };
 
   return (
-    <div className="dashboard-dark" style={{ paddingTop: '1px', paddingBottom: '40px' }}>
-    <div style={{ maxWidth: '1360px', margin: '30px auto', padding: '0 24px' }}>
-      {/* Header Banner */}
-      <div className="glass-card" style={{
-        padding: '24px 30px',
-        marginBottom: '26px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '20px',
-        borderLeft: '4px solid #3b82f6'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
-          <div style={{
-            width: '56px',
-            height: '56px',
-            borderRadius: '16px',
-            background: 'linear-gradient(135deg, #1d4ed8, #3b82f6)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white'
-          }}>
-            <Building2 size={28} />
-          </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#f8fafc', margin: 0 }}>
-                সাব-রেজিস্ট্রি অফিস ড্যাশবোর্ড
-              </h1>
-              <span style={{
-                fontSize: '11px',
-                padding: '3px 10px',
-                borderRadius: '999px',
-                background: 'rgba(59, 130, 246, 0.15)',
-                color: '#93c5fd',
-                border: '1px solid rgba(59, 130, 246, 0.3)',
-                fontWeight: '700'
+    <div className="dashboard-dark" style={{ paddingTop: '20px', paddingBottom: '60px' }}>
+      <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 20px' }}>
+        <div className="dashboard-layout">
+          {/* Left Sidebar */}
+          <aside className="dashboard-sidebar">
+            {/* Officer Profile Summary */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              paddingBottom: '16px',
+              borderBottom: '1px solid #e2e8f0'
+            }}>
+              <div style={{
+                width: '46px',
+                height: '46px',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #1d4ed8, #3b82f6)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: '22px',
+                flexShrink: 0,
+                boxShadow: '0 4px 12px rgba(29, 78, 216, 0.2)'
               }}>
-                Register Office Role
-              </span>
+                <Building2 size={24} />
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {user?.name || 'সাব-রেজিস্ট্রার'}
+                </div>
+                <div style={{ display: 'inline-block', fontSize: '11px', padding: '1px 8px', borderRadius: '999px', background: '#eff6ff', color: '#1d4ed8', fontWeight: '700', marginTop: '2px' }}>
+                  সাব-রেজিস্ট্রি অফিস
+                </div>
+              </div>
             </div>
-            <p style={{ color: '#94a3b8', fontSize: '13px', margin: '4px 0 0 0' }}>
-              কর্মকর্তা: <strong style={{ color: '#cbd5e1' }}>{user?.name}</strong> | {user?.office_details?.office_name || 'ঢাকা সদর সাব-রেজিস্ট্রি অফিস'}
-            </p>
-          </div>
-        </div>
 
-        {/* Tab switcher */}
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button
-            onClick={() => setActiveTab('assign')}
-            style={{
-              padding: '10px 18px',
-              borderRadius: '8px',
-              background: activeTab === 'assign' ? '#3b82f6' : 'rgba(255,255,255,0.05)',
-              color: 'white',
-              fontWeight: '700',
-              fontSize: '13px',
-              border: 'none',
-              cursor: 'pointer',
+            {/* Sidebar Navigation */}
+            <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '4px 8px 6px' }}>
+                ড্যাশবোর্ড মেনু
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveTab('assign')}
+                className={`sidebar-nav-item ${activeTab === 'assign' ? 'active-blue' : ''}`}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Layers size={18} color={activeTab === 'assign' ? '#1d4ed8' : '#64748b'} />
+                  <span>নাগরিককে জমি বরাদ্দ</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('deed_registry')}
+                className={`sidebar-nav-item ${activeTab === 'deed_registry' ? 'active-blue' : ''}`}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <FileText size={18} color={activeTab === 'deed_registry' ? '#1d4ed8' : '#64748b'} />
+                  <span>দলিল নিবন্ধন ও যাচাই</span>
+                </div>
+              </button>
+            </nav>
+
+            {/* Sidebar Officer & Security Widget */}
+            <div style={{
+              marginTop: 'auto',
+              paddingTop: '16px',
+              borderTop: '1px solid #e2e8f0',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px'
+            }}>
+              <div style={{ background: '#f8fafc', padding: '12px 14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '600' }}>অফিস বিবরণী</div>
+                <div style={{ fontSize: '12px', fontWeight: '700', color: '#0f172a', marginTop: '2px' }}>
+                  {user?.office_details?.office_name || 'ঢাকা সদর সাব-রেজিস্ট্রি অফিস'}
+                </div>
+                <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                  এখতিয়ার: {filter.district} · {filter.upazila}
+                </div>
+              </div>
+
+              <div style={{ background: '#eff6ff', padding: '10px 14px', borderRadius: '8px', border: '1px solid #bfdbfe', fontSize: '11px', color: '#1d4ed8', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Sparkles size={14} color="#2563eb" />
+                <span>P3 অ্যান্টি-ডাবল সেলিং সক্রিয়</span>
+              </div>
+            </div>
+          </aside>
+
+          {/* Main Content Area */}
+          <main className="dashboard-main">
+            {/* Top Stat Banner (Compact) */}
+            <div className="glass-card" style={{
+              padding: '18px 24px',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px'
-            }}
-          >
-            <Layers size={16} /> নাগরিককে জমি বরাদ্দ (Assign Land)
-          </button>
-          <button
-            onClick={() => setActiveTab('deed_registry')}
-            style={{
-              padding: '10px 18px',
-              borderRadius: '8px',
-              background: activeTab === 'deed_registry' ? '#3b82f6' : 'rgba(255,255,255,0.05)',
-              color: 'white',
-              fontWeight: '700',
-              fontSize: '13px',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-          >
-            <FileText size={16} /> দলিল নিবন্ধন ও ডাবল সেলিং চেক
-          </button>
-        </div>
-      </div>
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '16px',
+              borderLeft: '4px solid #3b82f6'
+            }}>
+              <div>
+                <h1 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
+                  {activeTab === 'assign' ? 'নাগরিককে জমি বরাদ্দ ও প্রেরণ (Assign Land)' : 'দলিল নিবন্ধন ও অ্যান্টি-ডাবল সেলিং প্যানেল'}
+                </h1>
+                <p style={{ color: '#64748b', fontSize: '12px', margin: '3px 0 0' }}>
+                  সাব-রেজিস্ট্রি অফিস · {user?.office_details?.office_name || 'ঢাকা সদর সাব-রেজিস্ট্রি অফিস'}
+                </p>
+              </div>
 
-      {activeTab === 'assign' && (
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={() => { fetchSentRequests(); handleSearchLand(); }}
+                  className="btn-secondary"
+                  style={{ padding: '7px 14px', fontSize: '12px' }}
+                >
+                  ডাটা রিফ্রেশ
+                </button>
+              </div>
+            </div>
+
+{activeTab === 'assign' && (
         <div>
           {/* Instructions bar */}
           <div style={{
@@ -887,7 +921,9 @@ export default function RegisterOfficeDashboard() {
           <P4RegistryPanel />
         </div>
       )}
-    </div>
+          </main>
+        </div>
+      </div>
     </div>
   );
 }

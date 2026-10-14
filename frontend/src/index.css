@@ -862,6 +862,107 @@ select option:checked {
 }
 
 /* ============================================================
+   Professional Sidebar Layout for Dashboards
+   ============================================================ */
+.dashboard-layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.dashboard-sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 84px;
+  border-radius: 16px;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  z-index: 10;
+}
+
+.dashboard-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #475569;
+  font-weight: 600;
+  font-size: 13.5px;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+}
+
+.sidebar-nav-item:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.sidebar-nav-item.active {
+  background: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #15803d !important;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(22, 163, 74, 0.08);
+}
+
+.sidebar-nav-item.active-blue {
+  background: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #1d4ed8 !important;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(29, 78, 216, 0.08);
+}
+
+.sidebar-nav-item.active-emerald {
+  background: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #047857 !important;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(4, 120, 87, 0.08);
+}
+
+.sidebar-nav-item.active-purple {
+  background: #faf5ff !important;
+  border-color: #e9d5ff !important;
+  color: #7e22ce !important;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(126, 34, 206, 0.08);
+}
+
+@media (max-width: 960px) {
+  .dashboard-layout {
+    flex-direction: column !important;
+  }
+  .dashboard-sidebar {
+    width: 100% !important;
+    position: static !important;
+    padding: 16px !important;
+  }
+}
+
+/* ============================================================
    Mobile Responsive Overrides
    ============================================================ */
 @media (max-width: 640px) {
