@@ -198,19 +198,6 @@ export default function P5CitizenVerify() {
     setResult(null);
   };
 
-  const quickSearch = (scenario) => {
-    const newFilter = {
-      division: 'রাজশাহী',
-      district: 'বগুড়া',
-      upazila: 'শিবগঞ্জ',
-      mouza: scenario.mouza,
-      jl_no: scenario.jl_no,
-      dag_no: scenario.dag_no,
-      khatian_no: scenario.khatian_no
-    };
-    setFilter(newFilter);
-    executeSearch(newFilter);
-  };
 
   return (
     <div className="dashboard-dark" style={{ paddingTop: '1px', paddingBottom: '40px' }}>
@@ -445,42 +432,6 @@ export default function P5CitizenVerify() {
           </button>
         </form>
 
-        {/* Quick test scenarios */}
-        <div style={{ marginTop: '24px', paddingTop: '18px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            ⚡ শিবগঞ্জ, বগুড়া ডেমো সিনারিও দ্রুত পরীক্ষা করুন (ক্লিক করলে ড্রপডাউন স্বয়ংক্রিয় সেট হবে):
-          </div>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {[
-              { label: '🟢 নিরাপদ: গুজিয়া (দাগ ১০১)', dag_no: '101', mouza: 'গুজিয়া', jl_no: '1', khatian_no: '25' },
-              { label: '🟢 নিরাপদ: অনন্তবালা (দাগ ২০৫)', dag_no: '205', mouza: 'অনন্তবালা', jl_no: '2', khatian_no: '48' },
-              { label: '🟡 হস্তান্তর চলমান: কিচক (দাগ ৪১২)', dag_no: '412', mouza: 'কিচক', jl_no: '4', khatian_no: '88' },
-              { label: '🔴 খাস জমি: হরিপুর (দাগ ৬১০)', dag_no: '610', mouza: 'হরিপুর', jl_no: '6', khatian_no: '105' },
-              { label: '🔴 আদালতের মামলা: জানগ্রাম (দাগ ১১০৫)', dag_no: '1105', mouza: 'জানগ্রাম', jl_no: '11', khatian_no: '160' },
-            ].map((s, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => quickSearch(s)}
-                style={{
-                  padding: '7px 14px',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.09)',
-                  borderRadius: '8px',
-                  color: '#cbd5e1',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.09)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* Result Display */}
