@@ -97,11 +97,17 @@ export const AuthProvider = ({ children }) => {
     throw new Error(res.data.message || 'ওটিপি যাচাই বা নিবন্ধন ব্যর্থ হয়েছে');
   };
 
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem('evhumi_token');
-    delete axios.defaults.headers.common['Authorization'];
+  const logout = async () => {
+    try {
+      if (token) {
+        await axios.post('/api/auth/logout').catch(() => {});
+      }
+    } finally {
+      setToken(null);
+      setUser(null);
+      localStorage.removeItem('evhumi_token');
+      delete axios.defaults.headers.common['Authorization'];
+    }
   };
 
   const getDashboardRoute = (userRole) => {

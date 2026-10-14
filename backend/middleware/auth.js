@@ -5,6 +5,19 @@ const { findUserByEmail } = require('../utils/dbStore');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'evhumi_super_secure_jwt_secret_key_2026_ministry_of_land';
 
+if (!global._tokenBlacklist) {
+  global._tokenBlacklist = new Set();
+}
+
+const isTokenBlacklisted = (token) => {
+  return global._tokenBlacklist && global._tokenBlacklist.has(token);
+};
+
+const blacklistToken = (token) => {
+  if (!global._tokenBlacklist) global._tokenBlacklist = new Set();
+  global._tokenBlacklist.add(token);
+};
+
 const verifyToken = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -13,6 +26,12 @@ const verifyToken = async (req, res, next) => {
     }
 
     const token = authHeader.split(' ')[1];
+
+    // Check if token was revoked via logout
+    if (isTokenBlacklisted(token)) {
+      return res.status(401).json({ success: false, message: 'টোকেনটি প্রত্যাহার (Revoked/Logged out) করা হয়েছে।' });
+    }
+
     const decoded = jwt.verify(token, JWT_SECRET);
 
     // 1. Virtual / Environment Super Admin bypass
@@ -95,4 +114,68 @@ const requireRole = (...allowedRoles) => {
   };
 };
 
-module.exports = { verifyToken, requireRole, JWT_SECRET };
+/**
+ * Sliding Window In-Memory Rate Limiter (Zero external dependencies)
+ */
+const rateLimitMap = new Map();
+
+const createRateLimiter = ({ windowMs = 15 * 60 * 1000, max = 15, message = 'অতিরিক্ত চেষ্টা করা হয়েছে। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।' } = {}) => {
+  return (req, res, next) => {
+    const ip = req.ip || req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
+    const now = Date.now();
+    const windowStart = now - windowMs;
+
+    const record = rateLimitMap.get(ip) || [];
+    const validRequests = record.filter(timestamp => timestamp > windowStart);
+
+    if (validRequests.length >= max) {
+      return res.status(429).json({ success: false, message });
+    }
+
+    validRequests.push(now);
+    rateLimitMap.set(ip, validRequests);
+
+    // Prevent memory leaks by cleaning old IP entries
+    if (rateLimitMap.size > 2000) {
+      for (const [key, timestamps] of rateLimitMap.entries()) {
+        const fresh = timestamps.filter(t => t > windowStart);
+        if (fresh.length === 0) rateLimitMap.delete(key);
+        else rateLimitMap.set(key, fresh);
+      }
+    }
+
+    next();
+  };
+};
+
+/**
+ * NoSQL Injection Sanitization
+ */
+const sanitizeInput = (req, res, next) => {
+  const sanitize = (obj) => {
+    if (!obj || typeof obj !== 'object') return obj;
+    for (const key of Object.keys(obj)) {
+      if (key.startsWith('$') || key.includes('.')) {
+        delete obj[key];
+      } else if (typeof obj[key] === 'object') {
+        sanitize(obj[key]);
+      }
+    }
+    return obj;
+  };
+
+  if (req.body) sanitize(req.body);
+  if (req.query) sanitize(req.query);
+  if (req.params) sanitize(req.params);
+  next();
+};
+
+module.exports = { 
+  verifyToken, 
+  requireRole, 
+  blacklistToken, 
+  isTokenBlacklisted, 
+  createRateLimiter, 
+  sanitizeInput, 
+  JWT_SECRET 
+};

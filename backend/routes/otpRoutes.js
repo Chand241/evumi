@@ -4,7 +4,14 @@ const User = require('../models/User');
 const OtpVerification = require('../models/OtpVerification');
 const { sendOtpEmail } = require('../utils/emailService');
 const jwt = require('jsonwebtoken');
-const { verifyToken, requireRole, JWT_SECRET } = require('../middleware/auth');
+const { verifyToken, requireRole, createRateLimiter, JWT_SECRET } = require('../middleware/auth');
+
+// OTP rate limiter: max 5 OTP requests per 10 mins per IP
+const otpLimiter = createRateLimiter({
+  windowMs: 10 * 60 * 1000,
+  max: 5,
+  message: 'অতিরিক্ত ওটিপি অনুরোধ করা হয়েছে। অনুগ্রহ করে ১০ মিনিট পর পুনরায় চেষ্টা করুন।'
+});
 
 const {
   findUserByEmail,
@@ -34,7 +41,7 @@ const generateToken = (user) => {
 // ==========================================
 // 1. Send OTP for Citizen Registration
 // ==========================================
-router.post('/send-registration-otp', async (req, res) => {
+router.post('/send-registration-otp', otpLimiter, async (req, res) => {
   try {
     const { email, nid, name } = req.body;
 

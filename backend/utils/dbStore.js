@@ -12,13 +12,24 @@ const OtpVerification = require('../models/OtpVerification');
  * Layer 3: Memory Store Fallback (cross-request caching)
  */
 
-const DATA_DIR = path.join(__dirname, '..', 'data');
+const os = require('os');
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+
+// In Serverless (Vercel), default file-system is read-only; use /tmp or memory
+const DATA_DIR = isServerless 
+  ? path.join(os.tmpdir(), 'evhumi-data') 
+  : path.join(__dirname, '..', 'data');
+
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const OTPS_FILE = path.join(DATA_DIR, 'otps.json');
 
-// Ensure data directory exists
-if (!fs.existsSync(DATA_DIR)) {
-  try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch (e) {}
+// Ensure data directory exists safely without crashing
+try {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+} catch (e) {
+  // Silent fallback to pure memory if directory cannot be created
 }
 
 const loadJsonFile = (filePath) => {
@@ -28,7 +39,7 @@ const loadJsonFile = (filePath) => {
       return JSON.parse(data);
     }
   } catch (err) {
-    console.warn(`Could not read ${filePath}:`, err.message);
+    // Suppress warning on cold starts
   }
   return [];
 };
@@ -37,11 +48,11 @@ const saveJsonFile = (filePath, items) => {
   try {
     fs.writeFileSync(filePath, JSON.stringify(items, null, 2), 'utf8');
   } catch (err) {
-    console.warn(`Could not write ${filePath}:`, err.message);
+    // In serverless read-only mode, memory store handles persistence during runtime
   }
 };
 
-// Initialize in-memory cache from persistent disk storage
+// Initialize in-memory cache
 if (!global._memoryUsers) {
   global._memoryUsers = loadJsonFile(USERS_FILE);
 }
@@ -52,28 +63,37 @@ if (!global._memoryOtps) {
 const isDbReady = () => mongoose.connection && mongoose.connection.readyState === 1;
 
 /**
- * Ensure MongoDB Atlas is connected or attempt reconnect
+ * Singleton connection cache for Serverless & Long-running servers.
+ * Prevents multiple concurrent connection attempts and connection pool exhaustion.
  */
+let cachedDbPromise = null;
+
 const ensureDbConnected = async () => {
   if (isDbReady()) return true;
+  if (cachedDbPromise) return cachedDbPromise;
 
   const mongoUri = process.env.MONGODB_URI || 'mongodb+srv://chanddiucse_db_user:aUoVygNtH29GsjPd@evumi.iexl4lo.mongodb.net/evhumi?retryWrites=true&w=majority&appName=Evumi';
   if (!mongoUri || mongoUri.includes('xxxxx')) return false;
 
-  try {
-    await mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 5000,
-      connectTimeoutMS: 5000
-    });
-    console.log('✅ MongoDB connected successfully');
+  cachedDbPromise = mongoose.connect(mongoUri, {
+    serverSelectionTimeoutMS: 5000,
+    connectTimeoutMS: 5000,
+    maxPoolSize: 10,
+    minPoolSize: 1,
+    socketTimeoutMS: 30000,
+  }).then(() => {
+    cachedDbPromise = null;
     return true;
-  } catch (err) {
+  }).catch((err) => {
+    cachedDbPromise = null;
     return false;
-  }
+  });
+
+  return cachedDbPromise;
 };
 
 /**
- * Execute a DB query with strict timeout
+ * Execute a DB query with strict timeout and connection pooling
  */
 const safeDbCall = async (fn, fallbackFn) => {
   const ready = await ensureDbConnected();
@@ -83,14 +103,12 @@ const safeDbCall = async (fn, fallbackFn) => {
 
   try {
     const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('DB_TIMEOUT')), 3000)
+      setTimeout(() => reject(new Error('DB_TIMEOUT')), 3500)
     );
     const result = await Promise.race([fn(), timeoutPromise]);
     if (result) return result;
-    // If not found in DB, check fallback
     return await fallbackFn();
   } catch (err) {
-    console.warn('⚠️ [DB Fallback Active]:', err.message);
     return await fallbackFn();
   }
 };

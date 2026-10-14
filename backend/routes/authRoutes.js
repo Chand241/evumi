@@ -3,7 +3,14 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
-const { verifyToken, JWT_SECRET } = require('../middleware/auth');
+const { verifyToken, blacklistToken, createRateLimiter, JWT_SECRET } = require('../middleware/auth');
+
+// Rate limiter for auth endpoints: max 15 login attempts per 15 mins per IP
+const authLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 15,
+  message: 'অতিরিক্ত লগইন চেষ্টা করা হয়েছে। অনুগ্রহ করে ১৫ মিনিট পর পুনরায় চেষ্টা করুন।'
+});
 
 // Helper to generate token
 const generateToken = (user) => {
@@ -104,8 +111,8 @@ router.post('/register', async (req, res) => {
 });
 
 // POST /api/auth/login
-// Unified single login — checks env-based Super Admin first, then DB users
-router.post('/login', async (req, res) => {
+// Unified single login with rate limiter
+router.post('/login', authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -186,7 +193,18 @@ router.get('/me', verifyToken, async (req, res) => {
       user: req.user
     });
   } catch (err) {
-    return res.status(500).json({ success: false, message: 'সার্ভার ত্রুটি।' });
+// POST /api/auth/logout
+// Revoke current session token
+router.post('/logout', verifyToken, async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      blacklistToken(token);
+    }
+    return res.status(200).json({ success: true, message: 'সফলভাবে লগআউট হয়েছে।' });
+  } catch (err) {
+    return res.status(200).json({ success: true, message: 'লগআউট সম্পন্ন।' });
   }
 });
 
