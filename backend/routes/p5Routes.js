@@ -2,6 +2,29 @@ const express = require('express');
 const router = express.Router();
 const LandRecord = require('../models/LandRecord');
 const LegalStatus = require('../models/LegalStatus');
+const { ensureDbConnected } = require('../utils/dbStore');
+
+// Helper: Safely mask owner name (null-safe)
+const maskOwnerName = (name, full = false) => {
+  if (!name || typeof name !== 'string' || name.length === 0) return '***';
+  if (full) {
+    // Return first char + next 2 chars + *** (for active/safe records)
+    return name.charAt(0) + (name.length > 1 ? name.substring(1, 3) : '') + '***';
+  }
+  // Partial mask (just first char + ***) for danger/warning
+  return name.charAt(0) + '***';
+};
+
+// Middleware: ensure DB is connected before any p5 route
+router.use(async (req, res, next) => {
+  try {
+    await ensureDbConnected();
+    next();
+  } catch (err) {
+    console.error('DB connection error in p5Routes:', err);
+    next(); // proceed anyway, let individual handlers catch errors
+  }
+});
 
 // GET /api/verify-land?mouza=X&dag=Y&khatian=Z
 // P5: Public read-only land verification with traffic light system
@@ -18,10 +41,10 @@ router.get('/verify-land', async (req, res) => {
     if (division) query.division = division;
     if (district) query.district = district;
     if (upazila) query.upazila = upazila;
-    if (mouza) query.mouza = { $regex: mouza, $options: 'i' };
-    if (dag_no) query.dag_no = dag_no;
-    if (khatian_no) query.khatian_no = khatian_no;
-    if (jl_no) query.jl_no = jl_no;
+    if (mouza) query.mouza = { $regex: mouza.trim(), $options: 'i' };
+    if (dag_no) query.dag_no = dag_no.trim();
+    if (khatian_no) query.khatian_no = khatian_no.trim();
+    if (jl_no) query.jl_no = jl_no.trim();
 
     // Find the most recent record
     const record = await LandRecord.findOne(query).sort({ createdAt: -1 });
@@ -40,7 +63,7 @@ router.get('/verify-land', async (req, res) => {
 
     // Mask NID: show first 7 digits then ****
     const maskedNid = record.owner_nid
-      ? record.owner_nid.substring(0, 7) + '****'
+      ? record.owner_nid.toString().substring(0, 7) + '****'
       : 'N/A';
 
     // Traffic Light Logic
@@ -63,7 +86,7 @@ router.get('/verify-land', async (req, res) => {
           jl_no: record.jl_no,
           khatian_no: record.khatian_no,
           dag_no: record.dag_no,
-          owner_name: record.owner_name.charAt(0) + '***',
+          owner_name: maskOwnerName(record.owner_name, false),
           owner_nid: maskedNid,
           total_area_decimal: record.total_area_decimal,
           status: record.status,
@@ -77,7 +100,7 @@ router.get('/verify-land', async (req, res) => {
       });
     }
 
-    // RED: Pending_Mutation (transaction in progress = double-sell risk)
+    // YELLOW: Pending_Mutation (transaction in progress = double-sell risk)
     if (record.status === 'Pending_Mutation') {
       return res.status(200).json({
         success: true,
@@ -91,7 +114,7 @@ router.get('/verify-land', async (req, res) => {
           jl_no: record.jl_no,
           khatian_no: record.khatian_no,
           dag_no: record.dag_no,
-          owner_name: record.owner_name.charAt(0) + '***',
+          owner_name: maskOwnerName(record.owner_name, false),
           owner_nid: maskedNid,
           total_area_decimal: record.total_area_decimal,
           status: record.status,
@@ -136,7 +159,7 @@ router.get('/verify-land', async (req, res) => {
         jl_no: record.jl_no,
         khatian_no: record.khatian_no,
         dag_no: record.dag_no,
-        owner_name: record.owner_name.charAt(0) + record.owner_name.substring(1, 3) + '***',
+        owner_name: maskOwnerName(record.owner_name, true),
         owner_nid: maskedNid,
         total_area_decimal: record.total_area_decimal,
         available_area_decimal: record.available_area_decimal,
@@ -147,8 +170,12 @@ router.get('/verify-land', async (req, res) => {
     });
 
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Server error', error: err.message });
+    console.error('P5 verify-land error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'সার্ভারে সমস্যা হয়েছে। অনুগ্রহ করে কিছুক্ষণ পর পুনরায় চেষ্টা করুন।',
+      error: process.env.NODE_ENV !== 'production' ? err.message : undefined
+    });
   }
 });
 
@@ -175,7 +202,12 @@ router.get('/verify-by-qr/:qr_code_id', async (req, res) => {
       }
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Server error', error: err.message });
+    console.error('P5 verify-by-qr error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'QR যাচাইয়ে সমস্যা হয়েছে। অনুগ্রহ করে পুনরায় চেষ্টা করুন।',
+      error: process.env.NODE_ENV !== 'production' ? err.message : undefined
+    });
   }
 });
 

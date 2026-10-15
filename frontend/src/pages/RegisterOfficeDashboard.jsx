@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { Building2, Search, UserCheck, Send, CheckCircle, Clock, AlertTriangle, FileText, Layers, Hash, MapPin, Sparkles } from 'lucide-react';
+import { Building2, Search, UserCheck, Send, CheckCircle, Clock, AlertTriangle, FileText, Layers, Hash, MapPin, Sparkles, ChevronRight, ChevronLeft, Mail, KeyRound, ShieldCheck } from 'lucide-react';
 import P4RegistryPanel from './P4RegistryPanel';
 import {
   BANGLADESH_DIVISIONS,
@@ -105,7 +105,10 @@ export default function RegisterOfficeDashboard() {
   const [searchingUser, setSearchingUser] = useState(false);
   const [userError, setUserError] = useState(null);
 
-  // Volume & Page fields (placed directly above Assign button)
+  // Wizard step: 1=citizen search, 2=land confirm, 3=document entry, 4=otp send, 5=otp verify & submit
+  const [wizardStep, setWizardStep] = useState(1);
+
+  // Volume & Page fields
   const [volumeBook, setVolumeBook] = useState('');
   const [pageNo, setPageNo] = useState('');
   const [deedNo, setDeedNo] = useState('');
@@ -218,29 +221,15 @@ export default function RegisterOfficeDashboard() {
     }
   };
 
-  const handleAssignLand = async (e) => {
-    e.preventDefault();
-    if (!selectedLand) {
-      alert('অনুগ্রহ করে প্রথমে জমি নির্বাচন করুন!');
-      return;
-    }
-    if (!foundUser) {
-      alert('অনুগ্রহ করে লক্ষ্য নাগরিক খুঁজে নির্বাচন করুন!');
-      return;
-    }
-    if (!volumeBook || !pageNo) {
-      alert('ভলিউম বই নম্বর এবং পৃষ্ঠা নম্বর প্রদান আবশ্যক!');
-      return;
-    }
+  const handleAssignLand = async () => {
+    if (!selectedLand || !foundUser || !volumeBook || !pageNo) return;
     if (!citizenOtp || citizenOtp.trim().length !== 6) {
-      alert('🔒 নাগরিকের ইমেইল ওটিপি (৬ ডিজিট) প্রদান আবশ্যক!');
+      setAssignError('🔒 নাগরিকের ইমেইল ওটিপি (৬ ডিজিট) প্রদান আবশ্যক!');
       return;
     }
-
     setAssigning(true);
     setAssignSuccess(null);
     setAssignError(null);
-
     try {
       const res = await axios.post('/api/assign/create-request', {
         land_record_id: selectedLand._id,
@@ -251,14 +240,20 @@ export default function RegisterOfficeDashboard() {
         remarks: remarks,
         otp: citizenOtp.trim()
       });
-
       if (res.data.success) {
         setAssignSuccess(res.data.message);
         setCitizenOtp('');
         setOtpSentMessage(null);
         setOtpPreview(null);
+        setWizardStep(1);
+        setFoundUser(null);
+        setUserQuery('');
+        setVolumeBook('');
+        setPageNo('');
+        setDeedNo('');
+        setRemarks('');
         fetchSentRequests();
-        handleSearchLand(); // refresh land status
+        handleSearchLand();
       }
     } catch (err) {
       setAssignError(err.response?.data?.message || 'বরাদ্দ অনুরোধ পাঠানো ব্যর্থ হয়েছে');
@@ -564,275 +559,565 @@ export default function RegisterOfficeDashboard() {
               )}
             </div>
 
-            {/* Right: Citizen Search + Volume/Page Fields + Submit to AC Land */}
-            <div className="glass-card" style={{ padding: '24px' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#f1f5f9', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* =========================================
+                STEP-BY-STEP WIZARD: লক্ষ্য নাগরিক ও বরাদ্দ ফরম
+                ========================================= */}
+            <div className="glass-card" style={{ padding: '24px', position: 'relative', overflow: 'hidden' }}>
+
+              {/* Wizard Header */}
+              <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#f1f5f9', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <UserCheck size={18} color="#60a5fa" /> লক্ষ্য নাগরিক নির্বাচন ও বরাদ্দ ফরম
               </h3>
 
-              {/* User search */}
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ fontSize: '12px', color: '#cbd5e1', display: 'block', marginBottom: '6px', fontWeight: '500' }}>
-                  নাগরিক অনুসন্ধান (NID / ফোন / ইমেইল)
-                </label>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <input
-                    type="text"
-                    className="input-field"
-                    placeholder="নাগরিকের NID দিন"
-                    value={userQuery}
-                    onChange={(e) => setUserQuery(e.target.value)}
-                    style={{ flex: 1, fontSize: '13px' }}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleSearchUser}
-                    className="btn-secondary"
-                    style={{ padding: '8px 14px', fontSize: '12px' }}
-                  >
-                    খুঁজুন
-                  </button>
-                </div>
-              </div>
-
-              {userError && (
-                <div style={{ padding: '8px 12px', background: 'rgba(239,68,68,0.1)', color: '#fca5a5', borderRadius: '6px', fontSize: '12px', marginBottom: '14px' }}>
-                  ⚠️ {userError}
-                </div>
-              )}
-
-              {/* Found user preview */}
-              {foundUser && (
-                <div style={{
-                  background: 'rgba(34, 197, 94, 0.08)',
-                  border: '1px solid rgba(34, 197, 94, 0.25)',
-                  borderRadius: '10px',
-                  padding: '14px',
-                  marginBottom: '20px'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                    <div style={{ fontWeight: '700', color: '#86efac', fontSize: '14px' }}>
-                      👤 {foundUser.name}
+              {/* Step Progress Bar */}
+              {(() => {
+                const steps = [
+                  { label: 'নাগরিক খোঁজা', icon: <Search size={14} /> },
+                  { label: 'জমি নিশ্চিত', icon: <MapPin size={14} /> },
+                  { label: 'দলিল তথ্য', icon: <FileText size={14} /> },
+                  { label: 'OTP প্রেরণ', icon: <Mail size={14} /> },
+                  { label: 'যাচাই ও জমা', icon: <ShieldCheck size={14} /> },
+                ];
+                return (
+                  <div style={{ marginBottom: '28px' }}>
+                    {/* Track */}
+                    <div style={{ display: 'flex', alignItems: 'center', position: 'relative', marginBottom: '8px' }}>
+                      {/* Progress line behind */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '18px',
+                        left: '18px',
+                        right: '18px',
+                        height: '3px',
+                        background: 'rgba(255,255,255,0.08)',
+                        borderRadius: '99px',
+                        zIndex: 0
+                      }} />
+                      <div style={{
+                        position: 'absolute',
+                        top: '18px',
+                        left: '18px',
+                        width: `calc(${((wizardStep - 1) / 4) * 100}% - 36px * ${(wizardStep - 1) / 4})`,
+                        height: '3px',
+                        background: 'linear-gradient(90deg, #1d4ed8, #3b82f6)',
+                        borderRadius: '99px',
+                        zIndex: 1,
+                        transition: 'width 0.4s ease'
+                      }} />
+                      {steps.map((s, i) => {
+                        const n = i + 1;
+                        const done = wizardStep > n;
+                        const active = wizardStep === n;
+                        return (
+                          <div key={n} style={{
+                            flex: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            position: 'relative',
+                            zIndex: 2
+                          }}>
+                            <div style={{
+                              width: '36px',
+                              height: '36px',
+                              borderRadius: '50%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '13px',
+                              fontWeight: '800',
+                              transition: 'all 0.3s ease',
+                              background: done
+                                ? 'linear-gradient(135deg, #16a34a, #22c55e)'
+                                : active
+                                  ? 'linear-gradient(135deg, #1d4ed8, #3b82f6)'
+                                  : 'rgba(255,255,255,0.07)',
+                              color: done || active ? '#fff' : '#64748b',
+                              boxShadow: active ? '0 0 0 4px rgba(59,130,246,0.2)' : 'none',
+                              border: done ? '2px solid #22c55e' : active ? '2px solid #3b82f6' : '2px solid rgba(255,255,255,0.1)'
+                            }}>
+                              {done ? <CheckCircle size={16} /> : s.icon}
+                            </div>
+                            <div style={{
+                              fontSize: '10px',
+                              fontWeight: active ? '700' : '500',
+                              color: done ? '#4ade80' : active ? '#93c5fd' : '#64748b',
+                              marginTop: '6px',
+                              whiteSpace: 'nowrap',
+                              transition: 'color 0.3s'
+                            }}>{s.label}</div>
+                          </div>
+                        );
+                      })}
                     </div>
-                    <span style={{ fontSize: '11px', background: 'rgba(34,197,94,0.2)', padding: '2px 8px', borderRadius: '999px', color: '#bbf7d0' }}>
-                      নিবন্ধিত নাগরিক
-                    </span>
                   </div>
-                  <div style={{ fontSize: '12px', color: '#cbd5e1', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
-                    <div>NID: <strong style={{ fontFamily: 'monospace' }}>{foundUser.nid}</strong></div>
-                    <div>মোবাইল: <strong>{foundUser.phone}</strong></div>
-                    <div>পিতা: <strong>{foundUser.father_name}</strong></div>
-                    <div>ঠিকানা: <strong>{foundUser.upazila}, {foundUser.district}</strong></div>
+                );
+              })()}
+
+              {/* ── STEP 1: নাগরিক অনুসন্ধান ── */}
+              {wizardStep === 1 && (
+                <div style={{ animation: 'fadeInUp 0.3s ease' }}>
+                  <div style={{
+                    background: 'rgba(59,130,246,0.06)',
+                    border: '1px solid rgba(59,130,246,0.2)',
+                    borderRadius: '10px',
+                    padding: '16px',
+                    marginBottom: '16px'
+                  }}>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#93c5fd', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Search size={15} /> ধাপ ১: নাগরিক অনুসন্ধান
+                    </div>
+                    <label style={{ fontSize: '12px', color: '#cbd5e1', display: 'block', marginBottom: '6px', fontWeight: '500' }}>
+                      নাগরিক অনুসন্ধান (NID / ফোন / ইমেইল)
+                    </label>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input
+                        id="citizen-search-input"
+                        type="text"
+                        className="input-field"
+                        placeholder="নাগরিকের NID / মোবাইল / ইমেইল দিন"
+                        value={userQuery}
+                        onChange={(e) => setUserQuery(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSearchUser()}
+                        style={{ flex: 1, fontSize: '13px' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSearchUser}
+                        disabled={searchingUser || !userQuery.trim()}
+                        className="btn-primary"
+                        style={{ padding: '8px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      >
+                        {searchingUser ? '...' : <><Search size={14} /> খুঁজুন</>}
+                      </button>
+                    </div>
+                  </div>
+
+                  {userError && (
+                    <div style={{ padding: '10px 12px', background: 'rgba(239,68,68,0.1)', color: '#fca5a5', borderRadius: '8px', fontSize: '12px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <AlertTriangle size={14} /> {userError}
+                    </div>
+                  )}
+
+                  {foundUser && (
+                    <div style={{
+                      background: 'rgba(34,197,94,0.08)',
+                      border: '1px solid rgba(34,197,94,0.3)',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      marginBottom: '20px',
+                      animation: 'fadeInUp 0.3s ease'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                        <div style={{ fontWeight: '800', color: '#4ade80', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #16a34a, #22c55e)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>👤</div>
+                          {foundUser.name}
+                        </div>
+                        <span style={{ fontSize: '11px', background: 'rgba(34,197,94,0.2)', padding: '3px 10px', borderRadius: '999px', color: '#bbf7d0', fontWeight: '700' }}>নিবন্ধিত নাগরিক</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', fontSize: '12px', color: '#a1a1aa' }}>
+                        <div>NID: <strong style={{ fontFamily: 'monospace', color: '#e2e8f0' }}>{foundUser.nid}</strong></div>
+                        <div>মোবাইল: <strong style={{ color: '#e2e8f0' }}>{foundUser.phone}</strong></div>
+                        <div>পিতা: <strong style={{ color: '#e2e8f0' }}>{foundUser.father_name}</strong></div>
+                        <div>ঠিকানা: <strong style={{ color: '#e2e8f0' }}>{foundUser.upazila}, {foundUser.district}</strong></div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!foundUser) { setUserError('আগে নাগরিক খুঁজুন এবং নিশ্চিত করুন।'); return; }
+                        setUserError(null);
+                        setWizardStep(2);
+                      }}
+                      className="btn-primary"
+                      style={{ padding: '10px 22px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}
+                    >
+                      পরবর্তী ধাপ <ChevronRight size={16} />
+                    </button>
                   </div>
                 </div>
               )}
 
-              {/* Volume Book and Page Number directly above Assign button */}
-              <div style={{
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: '10px',
-                padding: '16px',
-                marginBottom: '20px'
-              }}>
-                <div style={{ fontSize: '12px', fontWeight: '700', color: '#93c5fd', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <FileText size={14} /> সাব-রেজিস্ট্রি বালাম ও ভলিউম বই সংক্রান্ত তথ্য (বাধ্যতামূলক)
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px', fontWeight: '500' }}>
-                      ভলিউম বই নম্বর <span style={{ color: '#ef4444' }}>*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      className="input-field"
-                      placeholder="যেমন: VOL-2026-X"
-                      value={volumeBook}
-                      onChange={(e) => setVolumeBook(e.target.value)}
-                      style={{ width: '100%', fontSize: '13px' }}
-                    />
+              {/* ── STEP 2: জমি নিশ্চিতকরণ ── */}
+              {wizardStep === 2 && (
+                <div style={{ animation: 'fadeInUp 0.3s ease' }}>
+                  <div style={{ fontSize: '13px', fontWeight: '700', color: '#93c5fd', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <MapPin size={15} /> ধাপ ২: নির্বাচিত জমির তথ্য নিশ্চিত করুন
                   </div>
 
-                  <div>
-                    <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px', fontWeight: '500' }}>
-                      পৃষ্ঠা নম্বর <span style={{ color: '#ef4444' }}>*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      className="input-field"
-                      placeholder="যেমন: ১২৮"
-                      value={pageNo}
-                      onChange={(e) => setPageNo(e.target.value)}
-                      style={{ width: '100%', fontSize: '13px' }}
-                    />
-                  </div>
-                </div>
-
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px' }}>
-                    দলিল নম্বর (Deed No)
-                  </label>
-                  <input
-                    type="text"
-                    className="input-field"
-                    placeholder="DEED-2026-088"
-                    value={deedNo}
-                    onChange={(e) => setDeedNo(e.target.value)}
-                    style={{ width: '100%', fontSize: '13px' }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '4px' }}>
-                    রেজিস্ট্রার মন্তব্য
-                  </label>
-                  <input
-                    type="text"
-                    className="input-field"
-                    placeholder="স্বত্ব পর্যালোচনা মন্তব্য"
-                    value={remarks}
-                    onChange={(e) => setRemarks(e.target.value)}
-                    style={{ width: '100%', fontSize: '13px' }}
-                  />
-                </div>
-              </div>
-
-              {/* Citizen Email OTP Verification Block */}
-              <div style={{
-                background: 'rgba(59, 130, 246, 0.05)',
-                border: '1px solid rgba(59, 130, 246, 0.25)',
-                borderRadius: '10px',
-                padding: '16px',
-                marginBottom: '20px'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: '700', color: '#60a5fa', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    🔒 নাগরিক সম্মতি ও ইমেইল ওটিপি (OTP) যাচাইকরণ
-                  </div>
-                  {foundUser && (
-                    <span style={{ fontSize: '11px', color: '#93c5fd' }}>
-                      {foundUser.email}
-                    </span>
+                  {!selectedLand ? (
+                    <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8', fontSize: '13px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', marginBottom: '16px' }}>
+                      ⚠️ বাম পাশের ফিল্টার দিয়ে আগে জমি নির্বাচন করুন।
+                    </div>
+                  ) : (
+                    <div style={{
+                      background: 'rgba(16,185,129,0.07)',
+                      border: '1px solid rgba(16,185,129,0.25)',
+                      borderRadius: '12px',
+                      padding: '18px',
+                      marginBottom: '16px'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                        <div style={{ fontWeight: '800', color: '#34d399', fontSize: '15px' }}>দাগ নং: {selectedLand.dag_no} — মৌজা: {selectedLand.mouza}</div>
+                        <span style={{
+                          fontSize: '11px', padding: '3px 10px', borderRadius: '999px', fontWeight: '700',
+                          background: selectedLand.status === 'Active' ? 'rgba(34,197,94,0.15)' : 'rgba(245,158,11,0.15)',
+                          color: selectedLand.status === 'Active' ? '#86efac' : '#fde047'
+                        }}>{selectedLand.status}</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', fontSize: '12px', color: '#94a3b8' }}>
+                        <div>খতিয়ান: <strong style={{ color: '#e2e8f0' }}>{selectedLand.khatian_no}</strong></div>
+                        <div>জে.এল নং: <strong style={{ color: '#e2e8f0' }}>{selectedLand.jl_no}</strong></div>
+                        <div>পরিমাণ: <strong style={{ color: '#4ade80' }}>{selectedLand.total_area_decimal} শতক</strong></div>
+                        <div>বর্তমান মালিক: <strong style={{ color: '#e2e8f0' }}>{selectedLand.owner_name}</strong></div>
+                        <div>মালিকের NID: <strong style={{ fontFamily: 'monospace', color: '#e2e8f0' }}>{selectedLand.owner_nid}</strong></div>
+                        <div>উপজেলা: <strong style={{ color: '#e2e8f0' }}>{selectedLand.upazila || 'শিবগঞ্জ'}</strong></div>
+                      </div>
+                    </div>
                   )}
+
+                  {/* নাগরিক summary */}
+                  {foundUser && (
+                    <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '12px', marginBottom: '16px', fontSize: '12px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'linear-gradient(135deg, #1d4ed8, #3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', flexShrink: 0 }}>👤</div>
+                      <div>
+                        <span style={{ color: '#e2e8f0', fontWeight: '700' }}>{foundUser.name}</span> — NID: {foundUser.nid} — ইমেইল: <span style={{ color: '#93c5fd' }}>{foundUser.email}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <button type="button" onClick={() => setWizardStep(1)} className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <ChevronLeft size={16} /> পূর্ববর্তী
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!selectedLand) return;
+                        setWizardStep(3);
+                      }}
+                      disabled={!selectedLand}
+                      className="btn-primary"
+                      style={{ padding: '10px 22px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}
+                    >
+                      নিশ্চিত করুন <ChevronRight size={16} />
+                    </button>
+                  </div>
                 </div>
+              )}
 
-                <p style={{ fontSize: '11px', color: '#94a3b8', margin: '0 0 12px', lineHeight: 1.5 }}>
-                  এসি ল্যান্ড অফিসে প্রস্তাব পাঠানোর পূর্বে নাগরিকের ব্যক্তিগত ইমেইলে ওটিপি প্রেরণ ও তা যাচাই করা বাধ্যতামূলক।
-                </p>
+              {/* ── STEP 3: দলিল তথ্য ── */}
+              {wizardStep === 3 && (
+                <div style={{ animation: 'fadeInUp 0.3s ease' }}>
+                  <div style={{ fontSize: '13px', fontWeight: '700', color: '#93c5fd', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <FileText size={15} /> ধাপ ৩: সাব-রেজিস্ট্রি বালাম ও ভলিউম বই তথ্য
+                  </div>
 
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
-                  <button
-                    type="button"
-                    onClick={handleSendCitizenOtp}
-                    disabled={sendingCitizenOtp || !foundUser || !selectedLand}
-                    className="btn-secondary"
-                    style={{
-                      padding: '8px 14px',
-                      fontSize: '12px',
+                  <div style={{
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: '12px',
+                    padding: '18px',
+                    marginBottom: '16px'
+                  }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '6px', fontWeight: '600' }}>
+                          ভলিউম বই নম্বর <span style={{ color: '#ef4444' }}>*</span>
+                        </label>
+                        <input
+                          id="volume-book-input"
+                          type="text"
+                          required
+                          className="input-field"
+                          placeholder="যেমন: VOL-2026-A"
+                          value={volumeBook}
+                          onChange={(e) => setVolumeBook(e.target.value)}
+                          style={{ width: '100%', fontSize: '13px' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '6px', fontWeight: '600' }}>
+                          পৃষ্ঠা নম্বর <span style={{ color: '#ef4444' }}>*</span>
+                        </label>
+                        <input
+                          id="page-no-input"
+                          type="text"
+                          required
+                          className="input-field"
+                          placeholder="যেমন: ১২৮"
+                          value={pageNo}
+                          onChange={(e) => setPageNo(e.target.value)}
+                          style={{ width: '100%', fontSize: '13px' }}
+                        />
+                      </div>
+                    </div>
+                    <div style={{ marginBottom: '14px' }}>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '6px' }}>দলিল নম্বর (Deed No)</label>
+                      <input
+                        id="deed-no-input"
+                        type="text"
+                        className="input-field"
+                        placeholder="DEED-2026-088"
+                        value={deedNo}
+                        onChange={(e) => setDeedNo(e.target.value)}
+                        style={{ width: '100%', fontSize: '13px' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '6px' }}>রেজিস্ট্রার মন্তব্য</label>
+                      <input
+                        id="remarks-input"
+                        type="text"
+                        className="input-field"
+                        placeholder="স্বত্ব পর্যালোচনা মন্তব্য"
+                        value={remarks}
+                        onChange={(e) => setRemarks(e.target.value)}
+                        style={{ width: '100%', fontSize: '13px' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <button type="button" onClick={() => setWizardStep(2)} className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <ChevronLeft size={16} /> পূর্ববর্তী
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!volumeBook.trim() || !pageNo.trim()) {
+                          alert('ভলিউম বই নম্বর এবং পৃষ্ঠা নম্বর প্রদান আবশ্যক!');
+                          return;
+                        }
+                        setWizardStep(4);
+                      }}
+                      className="btn-primary"
+                      style={{ padding: '10px 22px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}
+                    >
+                      পরবর্তী ধাপ <ChevronRight size={16} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── STEP 4: OTP প্রেরণ ── */}
+              {wizardStep === 4 && (
+                <div style={{ animation: 'fadeInUp 0.3s ease' }}>
+                  <div style={{ fontSize: '13px', fontWeight: '700', color: '#93c5fd', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Mail size={15} /> ধাপ ৪: নাগরিকের ইমেইলে OTP প্রেরণ
+                  </div>
+
+                  <div style={{
+                    background: 'rgba(59,130,246,0.06)',
+                    border: '1px solid rgba(59,130,246,0.25)',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    marginBottom: '16px',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ fontSize: '40px', marginBottom: '12px' }}>📧</div>
+                    <div style={{ fontWeight: '700', color: '#e2e8f0', marginBottom: '6px' }}>
+                      {foundUser?.name}-এর ইমেইলে OTP পাঠানো হবে
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#93c5fd', marginBottom: '16px', fontFamily: 'monospace' }}>
+                      {foundUser?.email}
+                    </div>
+                    <p style={{ fontSize: '12px', color: '#94a3b8', lineHeight: 1.6, marginBottom: '18px' }}>
+                      এসি ল্যান্ড অফিসে প্রস্তাব পাঠানোর পূর্বে নাগরিকের ব্যক্তিগত ইমেইলে ওটিপি প্রেরণ ও যাচাই করা বাধ্যতামূলক।
+                    </p>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await handleSendCitizenOtp();
+                        if (!otpError) setWizardStep(5);
+                      }}
+                      disabled={sendingCitizenOtp || !foundUser || !selectedLand}
+                      className="btn-primary"
+                      style={{
+                        padding: '12px 28px',
+                        fontSize: '14px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        background: 'linear-gradient(135deg, #1d4ed8, #3b82f6)'
+                      }}
+                    >
+                      <Send size={16} />
+                      {sendingCitizenOtp ? 'ওটিপি পাঠানো হচ্ছে...' : '✉️ এখনই OTP পাঠান'}
+                    </button>
+
+                    {otpSentMessage && (
+                      <div style={{ padding: '10px 14px', background: 'rgba(34,197,94,0.1)', color: '#86efac', borderRadius: '8px', fontSize: '12px', marginTop: '14px' }}>
+                        ✅ {otpSentMessage}
+                      </div>
+                    )}
+                    {otpError && (
+                      <div style={{ padding: '10px 14px', background: 'rgba(239,68,68,0.1)', color: '#fca5a5', borderRadius: '8px', fontSize: '12px', marginTop: '14px' }}>
+                        ⚠️ {otpError}
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <button type="button" onClick={() => setWizardStep(3)} className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <ChevronLeft size={16} /> পূর্ববর্তী
+                    </button>
+                    {otpSentMessage && (
+                      <button
+                        type="button"
+                        onClick={() => setWizardStep(5)}
+                        className="btn-primary"
+                        style={{ padding: '10px 22px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}
+                      >
+                        OTP দিতে যান <ChevronRight size={16} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* ── STEP 5: OTP যাচাই ও চূড়ান্ত জমা ── */}
+              {wizardStep === 5 && (
+                <div style={{ animation: 'fadeInUp 0.3s ease' }}>
+                  <div style={{ fontSize: '13px', fontWeight: '700', color: '#93c5fd', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <ShieldCheck size={15} /> ধাপ ৫: OTP যাচাই ও চূড়ান্ত বরাদ্দ জমা
+                  </div>
+
+                  {/* Summary Card */}
+                  <div style={{
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: '12px',
+                    padding: '16px',
+                    marginBottom: '18px',
+                    fontSize: '12px',
+                    color: '#94a3b8'
+                  }}>
+                    <div style={{ fontWeight: '700', color: '#e2e8f0', marginBottom: '10px', fontSize: '13px' }}>📋 বরাদ্দের সারসংক্ষেপ</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                      <div>নাগরিক: <strong style={{ color: '#4ade80' }}>{foundUser?.name}</strong></div>
+                      <div>NID: <strong style={{ fontFamily: 'monospace', color: '#e2e8f0' }}>{foundUser?.nid}</strong></div>
+                      <div>জমির দাগ: <strong style={{ color: '#e2e8f0' }}>{selectedLand?.dag_no}</strong></div>
+                      <div>মৌজা: <strong style={{ color: '#e2e8f0' }}>{selectedLand?.mouza}</strong></div>
+                      <div>ভলিউম বই: <strong style={{ color: '#e2e8f0' }}>{volumeBook}</strong></div>
+                      <div>পৃষ্ঠা নং: <strong style={{ color: '#e2e8f0' }}>{pageNo}</strong></div>
+                    </div>
+                  </div>
+
+                  {/* OTP Input */}
+                  <div style={{
+                    background: 'rgba(59,130,246,0.05)',
+                    border: '1px solid rgba(59,130,246,0.25)',
+                    borderRadius: '12px',
+                    padding: '18px',
+                    marginBottom: '16px',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ fontSize: '13px', color: '#93c5fd', marginBottom: '6px' }}>🔒 নাগরিকের ইমেইলে প্রাপ্ত OTP লিখুন</div>
+                    <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '14px' }}>{foundUser?.email}</div>
+                    <input
+                      id="otp-input"
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      placeholder="○ ○ ○ ○ ○ ○"
+                      value={citizenOtp}
+                      onChange={(e) => setCitizenOtp(e.target.value.replace(/\D/g, ''))}
+                      className="input-field"
+                      style={{
+                        fontSize: '24px',
+                        letterSpacing: '12px',
+                        textAlign: 'center',
+                        fontFamily: 'monospace',
+                        fontWeight: '800',
+                        color: '#4ade80',
+                        width: '100%',
+                        maxWidth: '220px',
+                        padding: '12px'
+                      }}
+                    />
+                    {otpPreview && (
+                      <div style={{ padding: '8px 12px', background: 'rgba(245,158,11,0.1)', border: '1px dashed rgba(245,158,11,0.3)', color: '#fde047', borderRadius: '8px', fontSize: '11px', marginTop: '10px', display: 'inline-block' }}>
+                        💡 সিমুলেশন OTP: <strong>{otpPreview}</strong>
+                      </div>
+                    )}
+                    <div style={{ marginTop: '10px' }}>
+                      <button
+                        type="button"
+                        onClick={() => { setOtpSentMessage(null); setOtpPreview(null); setOtpError(null); setWizardStep(4); }}
+                        style={{ fontSize: '11px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+                      >
+                        OTP পাননি? আবার পাঠান
+                      </button>
+                    </div>
+                  </div>
+
+                  {assignSuccess && (
+                    <div style={{
+                      padding: '14px 16px',
+                      background: 'rgba(34,197,94,0.12)',
+                      border: '1px solid rgba(34,197,94,0.3)',
+                      borderRadius: '10px',
+                      color: '#86efac',
+                      fontSize: '13px',
+                      marginBottom: '16px',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '6px',
-                      background: 'rgba(59, 130, 246, 0.15)',
-                      borderColor: 'rgba(59, 130, 246, 0.3)',
-                      color: '#93c5fd',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <Send size={13} />
-                    {sendingCitizenOtp ? 'ওটিপি পাঠানো হচ্ছে...' : '✉️ নাগরিকের ইমেইলে OTP পাঠান'}
-                  </button>
+                      gap: '10px'
+                    }}>
+                      <CheckCircle size={18} color="#4ade80" /> {assignSuccess}
+                    </div>
+                  )}
+                  {assignError && (
+                    <div style={{
+                      padding: '14px 16px',
+                      background: 'rgba(239,68,68,0.12)',
+                      border: '1px solid rgba(239,68,68,0.3)',
+                      borderRadius: '10px',
+                      color: '#fca5a5',
+                      fontSize: '13px',
+                      marginBottom: '16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px'
+                    }}>
+                      <AlertTriangle size={18} color="#f87171" /> {assignError}
+                    </div>
+                  )}
 
-                  <input
-                    type="text"
-                    maxLength={6}
-                    placeholder="৬ ডিজিটের ওটিপি লিখুন"
-                    value={citizenOtp}
-                    onChange={(e) => setCitizenOtp(e.target.value.replace(/\D/g, ''))}
-                    className="input-field"
-                    style={{
-                      flex: 1,
-                      fontSize: '15px',
-                      letterSpacing: '4px',
-                      textAlign: 'center',
-                      fontFamily: 'monospace',
-                      fontWeight: '700',
-                      color: '#4ade80'
-                    }}
-                  />
-                </div>
-
-                {otpSentMessage && (
-                  <div style={{ padding: '8px 10px', background: 'rgba(34, 197, 94, 0.1)', color: '#86efac', borderRadius: '6px', fontSize: '11px', marginBottom: '6px' }}>
-                    ✅ {otpSentMessage}
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <button type="button" onClick={() => setWizardStep(4)} className="btn-secondary" style={{ padding: '10px 18px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <ChevronLeft size={16} /> পূর্ববর্তী
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAssignLand}
+                      disabled={assigning || citizenOtp.length !== 6}
+                      className="btn-primary"
+                      style={{
+                        padding: '12px 28px',
+                        fontSize: '14px',
+                        fontWeight: '700',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        background: citizenOtp.length === 6 ? 'linear-gradient(135deg, #16a34a, #22c55e)' : undefined,
+                        opacity: assigning ? 0.7 : 1
+                      }}
+                    >
+                      {assigning ? (
+                        <><span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⏳</span> পাঠানো হচ্ছে...</>
+                      ) : (
+                        <><ShieldCheck size={17} /> নাগরিককে জমি বরাদ্দ করুন ➔ এসি ল্যান্ডে পাঠান</>
+                      )}
+                    </button>
                   </div>
-                )}
-
-                {otpPreview && (
-                  <div style={{ padding: '8px 10px', background: 'rgba(245, 158, 11, 0.1)', border: '1px dashed rgba(245, 158, 11, 0.3)', color: '#fde047', borderRadius: '6px', fontSize: '11px', marginBottom: '6px' }}>
-                    💡 <strong>সিমুলেশন ওটিপি:</strong> {otpPreview} (আপনার .env এ জিমেইল কনফিগার থাকলে সরাসরি নাগরিকের ইনবক্সে যায়)
-                  </div>
-                )}
-
-                {otpError && (
-                  <div style={{ padding: '8px 10px', background: 'rgba(239, 68, 68, 0.1)', color: '#fca5a5', borderRadius: '6px', fontSize: '11px' }}>
-                    ⚠️ {otpError}
-                  </div>
-                )}
-              </div>
-
-              {/* Status messages */}
-              {assignSuccess && (
-                <div style={{
-                  padding: '12px',
-                  background: 'rgba(34, 197, 94, 0.12)',
-                  border: '1px solid rgba(34, 197, 94, 0.3)',
-                  borderRadius: '8px',
-                  color: '#86efac',
-                  fontSize: '13px',
-                  marginBottom: '16px'
-                }}>
-                  {assignSuccess}
                 </div>
               )}
 
-              {assignError && (
-                <div style={{
-                  padding: '12px',
-                  background: 'rgba(239, 68, 68, 0.12)',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
-                  borderRadius: '8px',
-                  color: '#fca5a5',
-                  fontSize: '13px',
-                  marginBottom: '16px'
-                }}>
-                  ⚠️ {assignError}
-                </div>
-              )}
-
-              {/* THE ASSIGN BUTTON */}
-              <button
-                type="button"
-                onClick={handleAssignLand}
-                disabled={assigning || !selectedLand || !foundUser || citizenOtp.length !== 6}
-                className="btn-primary"
-                style={{
-                  width: '100%',
-                  padding: '13px',
-                  fontSize: '15px',
-                  fontWeight: '700',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  background: 'linear-gradient(135deg, #1d4ed8, #2563eb)'
-                }}
-              >
-                <Send size={18} />
-                {assigning ? 'অনুরোধ পাঠানো হচ্ছে...' : 'নাগরিককে জমি বরাদ্দ করুন ➔ এসি ল্যান্ডে পাঠান'}
-              </button>
             </div>
           </div>
 
